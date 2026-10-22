@@ -1,0 +1,91 @@
+server:
+  port: 8080
+  shutdown: graceful
+  forward-headers-strategy: native
+  error:
+    include-stacktrace: never
+    include-message: never
+  tomcat:
+    max-swallow-size: 25MB
+  servlet:
+    session:
+      tracking-modes: cookie
+
+spring:
+  application:
+    name: trustvault
+  main:
+    banner-mode: off
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${TV_DB_URL:jdbc:postgresql://localhost:5432/trustvault}
+    username: ${TV_DB_APP_USER:trustvault_app}
+    password: ${TV_DB_APP_PASSWORD:trustvault_app}
+    hikari:
+      maximum-pool-size: ${TV_DB_POOL_SIZE:10}
+  flyway:
+    # Migrations run as the schema owner. The application itself connects as a less-privileged role
+    # that cannot UPDATE, DELETE or TRUNCATE the audit table (see V1__schema.sql).
+    user: ${TV_DB_OWNER_USER:trustvault_owner}
+    password: ${TV_DB_OWNER_PASSWORD:trustvault_owner}
+    placeholders:
+      appUser: ${TV_DB_APP_USER:trustvault_app}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+  servlet:
+    multipart:
+      max-file-size: 21MB
+      max-request-size: 22MB
+      file-size-threshold: 1MB
+  jackson:
+    default-property-inclusion: always
+    deserialization:
+      fail-on-unknown-properties: true
+
+management:
+  endpoints:
+    access:
+      default: none
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      access: read-only
+      show-details: never
+
+logging:
+  pattern:
+    level: "%5p [%X{requestId:-}]"
+
+trustvault:
+  security:
+    cookie-secure: ${TV_COOKIE_SECURE:true}
+    session-idle-timeout: ${TV_SESSION_IDLE:30m}
+    session-absolute-timeout: ${TV_SESSION_ABSOLUTE:8h}
+    max-failed-logins: 5
+    lockout-duration: 15m
+    login-attempts-per-ip-per-window: 30
+    login-window: 5m
+  crypto:
+    # 32 random bytes, base64. Wraps each file's data key. Required.
+    master-key: ${TV_MASTER_KEY:}
+    # >= 32 random bytes, base64. Keys the audit HMAC chain. Required. Keep it out of the database.
+    audit-hmac-key: ${TV_AUDIT_HMAC_KEY:}
+  upload:
+    max-bytes: 20971520
+  retention:
+    trash-days: 30
+    purge-cron: "0 15 3 * * *"
+  seed:
+    enabled: ${TV_SEED_ENABLED:false}
+    password-admin: ${TV_SEED_PASSWORD_ADMIN:}
+    password-owner: ${TV_SEED_PASSWORD_OWNER:}
+    password-viewer: ${TV_SEED_PASSWORD_VIEWER:}

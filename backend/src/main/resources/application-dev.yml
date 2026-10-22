@@ -1,0 +1,13 @@
+# Local development profile: activate with SPRING_PROFILES_ACTIVE=dev.
+# These keys are for local use only and are public. Production must supply its own via environment variables.
+trustvault:
+  security:
+    cookie-secure: false
+  crypto:
+    master-key: ${TV_MASTER_KEY:ZGV2LW9ubHktbWFzdGVyLWtleS0zMi1ieXRlcyEhISE=}
+    audit-hmac-key: ${TV_AUDIT_HMAC_KEY:ZGV2LW9ubHktYXVkaXQtaG1hYy1rZXktMzJieXRlcyE=}
+  seed:
+    enabled: ${TV_SEED_ENABLED:true}
+    password-admin: ${TV_SEED_PASSWORD_ADMIN:Admin#Vault2026}
+    password-owner: ${TV_SEED_PASSWORD_OWNER:Owner#Vault2026}
+    password-viewer: ${TV_SEED_PASSWORD_VIEWER:Viewer#Vault2026}

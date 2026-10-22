@@ -1,0 +1,80 @@
+import type { HTMLAttributes, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from 'react';
+import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/cn';
+
+export function Table({ className, children, ...rest }: HTMLAttributes<HTMLTableElement>) {
+  return (
+    <div className="overflow-x-auto">
+      <table className={cn('w-full border-collapse text-left text-sm', className)} {...rest}>
+        {children}
+      </table>
+    </div>
+  );
+}
+
+export function THead({ children }: { children: ReactNode }) {
+  return <thead className="border-b border-slate-200 bg-slate-50/70">{children}</thead>;
+}
+
+export function TBody({ children }: { children: ReactNode }) {
+  return <tbody className="divide-y divide-slate-100">{children}</tbody>;
+}
+
+export function TH({ className, children, ...rest }: ThHTMLAttributes<HTMLTableCellElement>) {
+  return (
+    <th scope="col" className={cn('whitespace-nowrap px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-slate-500', className)} {...rest}>
+      {children}
+    </th>
+  );
+}
+
+export type SortDir = 'asc' | 'desc';
+
+export function SortableTH({
+  label,
+  active,
+  direction,
+  onSort,
+  className,
+}: {
+  label: string;
+  active: boolean;
+  direction: SortDir;
+  onSort: () => void;
+  className?: string;
+}) {
+  const Icon = !active ? ChevronsUpDown : direction === 'asc' ? ArrowUp : ArrowDown;
+  return (
+    <th
+      scope="col"
+      aria-sort={active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}
+      className={cn('whitespace-nowrap px-4 py-2 text-xs font-medium uppercase tracking-wide text-slate-500', className)}
+    >
+      <button
+        type="button"
+        onClick={onSort}
+        className={cn(
+          '-mx-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 uppercase tracking-wide hover:bg-slate-100 hover:text-slate-800',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+          active && 'text-slate-900',
+        )}
+      >
+        {label}
+        <Icon className={cn('h-3.5 w-3.5', !active && 'opacity-50')} aria-hidden />
+      </button>
+    </th>
+  );
+}
+
+export function TR({ className, interactive, ...rest }: HTMLAttributes<HTMLTableRowElement> & { interactive?: boolean }) {
+  return (
+    <tr
+      className={cn('group transition-colors', interactive && 'cursor-pointer hover:bg-slate-50/80 focus-within:bg-slate-50/80', className)}
+      {...rest}
+    />
+  );
+}
+
+export function TD({ className, ...rest }: TdHTMLAttributes<HTMLTableCellElement>) {
+  return <td className={cn('px-4 py-3 align-middle text-slate-700', className)} {...rest} />;
+}
