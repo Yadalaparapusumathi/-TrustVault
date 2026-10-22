@@ -1,0 +1,79 @@
+# TrustVault — full stack. Usage:
+#   cp .env.example .env   # fill in secrets
+#   docker compose up -d --build
+# Open http://localhost:8080 (set TV_COOKIE_SECURE=false in .env for plain-http local use).
+# For a public deployment with TLS add the Caddy overlay: see docker-compose.prod.yml.
+
+name: trustvault
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      TV_DB_OWNER_PASSWORD: ${TV_DB_OWNER_PASSWORD:?set TV_DB_OWNER_PASSWORD in .env}
+      TV_DB_APP_PASSWORD: ${TV_DB_APP_PASSWORD:?set TV_DB_APP_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./deploy/db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d trustvault"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+    # No published port: the database is reachable only from the backend.
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      TV_DB_URL: jdbc:postgresql://postgres:5432/trustvault
+      TV_DB_OWNER_PASSWORD: ${TV_DB_OWNER_PASSWORD}
+      TV_DB_APP_PASSWORD: ${TV_DB_APP_PASSWORD}
+      TV_MASTER_KEY: ${TV_MASTER_KEY:?set TV_MASTER_KEY in .env}
+      TV_AUDIT_HMAC_KEY: ${TV_AUDIT_HMAC_KEY:?set TV_AUDIT_HMAC_KEY in .env}
+      TV_COOKIE_SECURE: ${TV_COOKIE_SECURE:-true}
+      TV_SEED_ENABLED: ${TV_SEED_ENABLED:-false}
+      TV_SEED_PASSWORD_ADMIN: ${TV_SEED_PASSWORD_ADMIN:-}
+      TV_SEED_PASSWORD_OWNER: ${TV_SEED_PASSWORD_OWNER:-}
+      TV_SEED_PASSWORD_VIEWER: ${TV_SEED_PASSWORD_VIEWER:-}
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    networks: [internal]
+    # No published port: only the frontend proxy talks to it.
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      BACKEND_HOST: backend
+    ports:
+      - "127.0.0.1:${TV_HTTP_PORT:-8080}:8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /etc/nginx/conf.d
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    networks: [internal, edge]
+
+networks:
+  internal:
+    internal: true
+  edge: {}
+
+volumes:
+  pgdata:

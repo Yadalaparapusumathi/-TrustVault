@@ -1,0 +1,12 @@
+{$TV_DOMAIN} {
+	encode zstd gzip
+	# Caddy does not trust client-supplied X-Forwarded-For (no trusted_proxies), so the backend sees the real client IP.
+	reverse_proxy frontend:8080
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+	request_body {
+		max_size 25MB
+	}
+}

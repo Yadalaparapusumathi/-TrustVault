@@ -1,0 +1,24 @@
+# Public deployment overlay: Caddy terminates TLS (automatic Let's Encrypt certificate for TV_DOMAIN)
+# and forwards to the frontend proxy. Point the domain's DNS A/AAAA record at the host first.
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on: [frontend]
+    environment:
+      TV_DOMAIN: ${TV_DOMAIN:?set TV_DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [edge]
+
+volumes:
+  caddy_data:
+  caddy_config:
