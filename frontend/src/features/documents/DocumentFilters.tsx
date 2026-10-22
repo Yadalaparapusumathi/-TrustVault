@@ -23,7 +23,7 @@ export function DocumentFilters({
 
   return (
     <div className="grid grid-cols-1 gap-2.5 border-b border-slate-100 p-3 sm:grid-cols-2 lg:grid-cols-12" role="search" aria-label="Filter documents">
-      <div className="lg:col-span-3">
+      <div className="lg:col-span-5">
         <DebouncedInput
           aria-label="Search by name"
           placeholder="Search by name…"
@@ -33,7 +33,7 @@ export function DocumentFilters({
           type="search"
         />
       </div>
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-3">
         <DebouncedInput
           aria-label="Filter by owner"
           placeholder="Owner…"
@@ -63,7 +63,7 @@ export function DocumentFilters({
           ))}
         </Select>
       </div>
-      <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-3">
+      <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-6 [&>div]:flex-1">
         <Input
           type="date"
           aria-label="Created from"

@@ -128,7 +128,7 @@ export function AuditLog() {
               ))}
             </Select>
           </div>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-5">
             <DebouncedInput
               aria-label="Document ID"
               placeholder="Document ID…"
@@ -138,7 +138,7 @@ export function AuditLog() {
               className="font-mono text-xs"
             />
           </div>
-          <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-3">
+          <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-6 [&>div]:flex-1">
             <Input type="date" aria-label="From date" title="From" value={filters.from} max={filters.to || undefined} onChange={(e) => update({ from: e.target.value })} />
             <span className="text-xs text-slate-400">to</span>
             <Input type="date" aria-label="To date" title="To" value={filters.to} min={filters.from || undefined} onChange={(e) => update({ to: e.target.value })} />
