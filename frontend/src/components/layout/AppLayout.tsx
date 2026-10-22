@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Menu } from 'lucide-react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Logo } from '@/components/domain/Logo';
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Drawer } from '@/components/ui/Drawer';
 import { Sidebar, SidebarContent } from './Sidebar';
 
-export function AppLayout() {
+export function AppLayout({ children }: { children?: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
@@ -36,7 +36,7 @@ export function AppLayout() {
       </Drawer>
       <main id="main" tabIndex={-1} className="focus:outline-none lg:pl-64">
         <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
-          <Outlet />
+          {children ?? <Outlet />}
         </div>
       </main>
     </div>

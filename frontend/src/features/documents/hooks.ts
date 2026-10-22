@@ -1,4 +1,4 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, skipToken, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { directoryApi, documentsApi } from '@/api/documents';
@@ -64,24 +64,27 @@ export function useActivity(id: string, page: number, size = 20, enabled = true)
   });
 }
 
-/** Suggestions are generated (and audited) on demand only — never fetched automatically. */
+/**
+ * Suggestions are generated (and audited) on demand only via POST — never fetched automatically.
+ * The result lives in the query cache (read with `skipToken`) so grant/dismiss can update it and
+ * cache invalidations never silently re-generate suggestions.
+ */
 export function useSuggestions(id: string) {
-  const [requested, setRequested] = useState(false);
-  const query = useQuery({
-    queryKey: queryKeys.documents.suggestions(id),
-    queryFn: ({ signal }) => documentsApi.suggestions(id, signal),
-    enabled: requested,
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    retry: false,
+  const qc = useQueryClient();
+  const key = queryKeys.documents.suggestions(id);
+  const cached = useQuery<Suggestion[]>({ queryKey: key, queryFn: skipToken, staleTime: Infinity });
+  const generate = useMutation({
+    mutationFn: () => documentsApi.generateSuggestions(id),
+    onSuccess: (data) => qc.setQueryData<Suggestion[]>(key, data),
   });
+  const requested = cached.data !== undefined || !generate.isIdle;
   return {
-    ...query,
+    data: cached.data,
     requested,
-    request: () => {
-      if (requested) void query.refetch();
-      else setRequested(true);
-    },
+    isFetching: generate.isPending,
+    isError: generate.isError,
+    error: generate.error,
+    request: () => generate.mutate(),
   };
 }
 

@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { AuditEvent } from '@/api/types';
-import { ActionIcon, actorLabel, targetLabel } from '@/components/domain/audit';
+import { ActionIcon } from '@/components/domain/audit';
+import { actorLabel, targetLabel } from '@/lib/audit';
 import { OutcomeBadge } from '@/components/domain/badges';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { RelativeTime } from '@/components/ui/RelativeTime';

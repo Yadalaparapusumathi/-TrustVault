@@ -2,15 +2,7 @@ import { useEffect, useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/cn';
-
-export async function copyText(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { copyText } from '@/lib/clipboard';
 
 export function CopyButton({ value, label = 'Copy', className }: { value: string; label?: string; className?: string }) {
   const [copied, setCopied] = useState(false);

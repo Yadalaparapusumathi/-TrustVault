@@ -3,7 +3,7 @@ import { FileDown, ScrollText, Search, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { adminApi } from '@/api/admin';
 import { AUDIT_OUTCOMES, type AuditEvent, type AuditOutcome, type AuditSearchParams } from '@/api/types';
-import { actorLabel, targetLabel } from '@/components/domain/audit';
+import { actorLabel, targetLabel } from '@/lib/audit';
 import { OutcomeBadge } from '@/components/domain/badges';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -39,7 +39,7 @@ export function AuditLog() {
     return {
       actor: params.get('actor') ?? '',
       action: params.get('action') ?? '',
-      outcome: (AUDIT_OUTCOMES as readonly string[]).includes(outcome) ? (outcome as AuditOutcome) : '',
+      outcome: ((AUDIT_OUTCOMES as readonly string[]).includes(outcome) ? outcome : '') as AuditOutcome | '',
       documentId: params.get('documentId') ?? '',
       from: DATE_RE.test(from) ? from : '',
       to: DATE_RE.test(to) ? to : '',

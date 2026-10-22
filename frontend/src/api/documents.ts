@@ -62,7 +62,8 @@ export const documentsApi = {
   createGrant: (id: string, body: CreateGrantRequest) => api.post<Grant>(`${doc(id)}/grants`, body),
   revokeGrant: (id: string, grantId: string) => api.delete(`${doc(id)}/grants/${enc(grantId)}`),
 
-  suggestions: (id: string, signal?: AbortSignal) => api.get<Suggestion[]>(`${doc(id)}/suggestions`, { signal }),
+  /** POST: generating suggestions is recorded server-side (pending suggestions + ACCESS_SUGGESTED audit event). */
+  generateSuggestions: (id: string) => api.post<Suggestion[]>(`${doc(id)}/suggestions`),
   dismissSuggestion: (id: string, suggestionId: string) =>
     api.post<void>(`${doc(id)}/suggestions/${enc(suggestionId)}/dismiss`),
 };

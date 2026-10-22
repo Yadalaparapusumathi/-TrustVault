@@ -1,5 +1,6 @@
 import { useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { cn } from '@/lib/cn';
+import { panelId, tabId } from '@/lib/tabs';
 
 export interface TabItem<T extends string> {
   value: T;
@@ -16,9 +17,6 @@ export interface TabsProps<T extends string> {
   idPrefix: string;
   className?: string;
 }
-
-export const tabId = (prefix: string, value: string) => `${prefix}-tab-${value}`;
-export const panelId = (prefix: string, value: string) => `${prefix}-panel-${value}`;
 
 /** Accessible tablist (roving tabindex + arrow keys). Render the panel with <TabPanel>. */
 export function Tabs<T extends string>({ items, value, onChange, label, idPrefix, className }: TabsProps<T>) {
