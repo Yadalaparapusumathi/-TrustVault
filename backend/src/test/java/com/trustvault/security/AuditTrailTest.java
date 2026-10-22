@@ -41,7 +41,7 @@ class AuditTrailTest extends IntegrationTest {
         assertThat(countAudit("DOCUMENT_VIEWED", "SUCCESS", reader.id(), doc)).isEqualTo(1);
         assertThat(countAudit("DOCUMENT_DOWNLOADED", "SUCCESS", reader.id(), doc)).isEqualTo(1);
         assertThat(countAudit("GRANT_REVOKED", "SUCCESS", owner.id(), doc)).isEqualTo(1);
-        assertThat(countAudit("DOCUMENT_TRASHED", "SUCCESS", owner.id(), doc)).isEqualTo(1);
+        assertThat(countAudit("DOCUMENT_DELETED", "SUCCESS", owner.id(), doc)).isEqualTo(1);
     }
 
     @Test
@@ -65,11 +65,11 @@ class AuditTrailTest extends IntegrationTest {
     void appRoleCannotAlterAudit() {
         assertThat(appJdbc.queryForObject("select current_user", String.class)).isEqualTo("trustvault_app");
         assertThatThrownBy(() -> appJdbc.update("update audit_events set actor_username = 'someone-else'"))
-                .isInstanceOf(DataAccessException.class).hasMessageContaining("permission denied");
+                .isInstanceOf(DataAccessException.class).rootCause().hasMessageContaining("permission denied");
         assertThatThrownBy(() -> appJdbc.update("delete from audit_events"))
-                .isInstanceOf(DataAccessException.class).hasMessageContaining("permission denied");
+                .isInstanceOf(DataAccessException.class).rootCause().hasMessageContaining("permission denied");
         assertThatThrownBy(() -> appJdbc.execute("truncate audit_events"))
-                .isInstanceOf(DataAccessException.class).hasMessageContaining("permission denied");
+                .isInstanceOf(DataAccessException.class).rootCause().hasMessageContaining("permission denied");
     }
 
     @Test
@@ -77,9 +77,9 @@ class AuditTrailTest extends IntegrationTest {
     void triggerBlocksOwner() {
         JdbcTemplate su = superuserJdbc();
         assertThatThrownBy(() -> su.update("update audit_events set ip = '6.6.6.6' where seq = 1"))
-                .hasMessageContaining("append-only");
+                .rootCause().hasMessageContaining("append-only");
         assertThatThrownBy(() -> su.update("delete from audit_events where seq = 1"))
-                .hasMessageContaining("append-only");
+                .rootCause().hasMessageContaining("append-only");
     }
 
     @Test
@@ -177,13 +177,16 @@ class AuditTrailTest extends IntegrationTest {
     }
 
     @Test
-    @DisplayName("CSV export neutralises spreadsheet formulas planted in user-controlled fields")
+    @DisplayName("CSV export neutralises spreadsheet formulas planted in attacker-controlled fields")
     void csvInjectionIsNeutralised() throws Exception {
-        Actor owner = actor(Role.OWNER);
+        Actor attacker = actor(Role.VIEWER);
         Actor admin = actor(Role.ADMIN);
-        upload(owner, "=HYPERLINK(\"http://evil.example\",\"x\")", "Test", "x.txt", text("x\n"));
+        mvc.perform(as(attacker, get("/api/documents/{id}", UUID.randomUUID()))
+                .header("User-Agent", "=HYPERLINK(\"http://evil.example\",\"open\")"));
         String csv = perform(admin, get("/api/admin/audit/export")).getResponse().getContentAsString();
-        assertThat(csv).doesNotContain(",=HYPERLINK").doesNotContain("\"=HYPERLINK");
+        assertThat(csv).contains("HYPERLINK");
+        // No cell may start with a formula trigger once the CSV is parsed by a spreadsheet.
+        assertThat(csv).doesNotContainPattern("(^|,)\"?[=+\\-@]");
     }
 
     @Test

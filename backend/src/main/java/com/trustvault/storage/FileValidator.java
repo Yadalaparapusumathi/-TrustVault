@@ -57,7 +57,7 @@ public class FileValidator {
             "docx", "word/document.xml", "xlsx", "xl/workbook.xml", "pptx", "ppt/presentation.xml");
     private static final Set<String> ZIP_TYPES = Set.of("application/zip", "application/x-tika-ooxml", DOCX, XLSX, PPTX);
     private static final Pattern PDF_NAME_ESCAPE = Pattern.compile("#([0-9A-Fa-f]{2})");
-    private static final Pattern PDF_ACTIVE = Pattern.compile("/(JavaScript|JS|Launch|EmbeddedFile|RichMedia|XFA)\\b");
+    private static final Pattern PDF_ACTIVE = Pattern.compile("/(JavaScript|JS|Launch|EmbeddedFiles?|RichMedia|XFA|AA|SubmitForm|ImportData|GoToR)\\b");
     private static final Pattern TEXT_ACTIVE = Pattern.compile("<\\s*(script|html|svg|iframe|object|embed)\\b",
             Pattern.CASE_INSENSITIVE);
     private static final long MAX_IMAGE_PIXELS = 50_000_000L;

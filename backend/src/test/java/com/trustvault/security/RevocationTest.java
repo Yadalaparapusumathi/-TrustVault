@@ -111,6 +111,16 @@ class RevocationTest extends IntegrationTest {
     }
 
     @Test
+    @DisplayName("An inactive account is refused on every request even if its session rows still exist")
+    void inactiveUserIsCheckedPerRequest() throws Exception {
+        grant(owner, doc, grantee, "READ");
+        // Deactivated by a path that does not delete sessions (e.g. a direct directory sync).
+        appJdbc.update("update users set active = false where id = ?", grantee.id());
+
+        assertThat(status(grantee, get("/api/documents/{id}/content", doc))).isEqualTo(401);
+    }
+
+    @Test
     @DisplayName("Admin 'revoke sessions' and 'reset password' log the user out everywhere")
     void adminCanKillSessions() throws Exception {
         Actor admin = actor(Role.ADMIN);
