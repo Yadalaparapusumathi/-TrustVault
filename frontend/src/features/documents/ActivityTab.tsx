@@ -3,7 +3,7 @@ import { ChevronDown, Globe, History } from 'lucide-react';
 import type { AuditEvent, DocumentDetail } from '@/api/types';
 import { ActionIcon, DetailsJson } from '@/components/domain/audit';
 import { OutcomeBadge, RoleBadge } from '@/components/domain/badges';
-import { Card } from '@/components/ui/Card';
+import { Card, CardHeader } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Pagination } from '@/components/ui/Pagination';
@@ -21,6 +21,7 @@ export function ActivityTab({ doc }: { doc: DocumentDetail }) {
 
   return (
     <Card className="overflow-hidden">
+      <CardHeader title="The story of this document" description="Who accessed it, what changed and which attempts were refused." icon={<History className="h-4 w-4" />} />
       {activity.isPending ? (
         <SkeletonRows rows={6} cols={3} />
       ) : activity.isError ? (

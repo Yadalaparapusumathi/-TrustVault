@@ -13,7 +13,7 @@ export function Table({ className, children, ...rest }: HTMLAttributes<HTMLTable
 }
 
 export function THead({ children }: { children: ReactNode }) {
-  return <thead className="border-b border-slate-200 bg-slate-50/70">{children}</thead>;
+  return <thead className="border-y border-slate-100 bg-canvas/80">{children}</thead>;
 }
 
 export function TBody({ children }: { children: ReactNode }) {
@@ -22,7 +22,7 @@ export function TBody({ children }: { children: ReactNode }) {
 
 export function TH({ className, children, ...rest }: ThHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <th scope="col" className={cn('whitespace-nowrap px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-slate-500', className)} {...rest}>
+    <th scope="col" className={cn('whitespace-nowrap px-5 py-3.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500', className)} {...rest}>
       {children}
     </th>
   );
@@ -48,7 +48,7 @@ export function SortableTH({
     <th
       scope="col"
       aria-sort={active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}
-      className={cn('whitespace-nowrap px-4 py-2 text-xs font-medium uppercase tracking-wide text-slate-500', className)}
+      className={cn('whitespace-nowrap px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500', className)}
     >
       <button
         type="button"
@@ -69,12 +69,12 @@ export function SortableTH({
 export function TR({ className, interactive, ...rest }: HTMLAttributes<HTMLTableRowElement> & { interactive?: boolean }) {
   return (
     <tr
-      className={cn('group transition-colors', interactive && 'cursor-pointer hover:bg-slate-50/80 focus-within:bg-slate-50/80', className)}
+      className={cn('group transition-colors', interactive && 'cursor-pointer hover:bg-brand-50/40 focus-within:bg-brand-50/40', className)}
       {...rest}
     />
   );
 }
 
 export function TD({ className, ...rest }: TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={cn('px-4 py-3 align-middle text-slate-700', className)} {...rest} />;
+  return <td className={cn('px-5 py-4 align-middle text-slate-700', className)} {...rest} />;
 }

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ArrowRightLeft, KeyRound, LogOut, MoreHorizontal, Pencil, Search, UserCheck, UserPlus, Users, UserX } from 'lucide-react';
 import { toast } from 'sonner';
-import type { AdminUser } from '@/api/types';
+import { ROLES, type AdminUser, type Role } from '@/api/types';
 import { useMe } from '@/auth/AuthContext';
 import { RoleBadge } from '@/components/domain/badges';
 import { UserCell } from '@/components/domain/UserCell';
@@ -19,6 +19,7 @@ import { SkeletonRows } from '@/components/ui/Skeleton';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/Table';
 import { useNow } from '@/lib/useNow';
 import { notifyError } from '@/lib/notify';
+import { formatNumber } from '@/lib/format';
 import { useAdminUsers, useRevokeSessions, useUpdateUser } from './hooks';
 import { CreateUserDialog, EditUserDialog, ResetPasswordDialog, TransferDocumentsDialog } from './UserDialogs';
 
@@ -51,16 +52,17 @@ export function UsersAdmin() {
   const revoke = useRevokeSessions();
   const [action, setAction] = useState<Action>(null);
   const [filter, setFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState<Role | null>(null);
   const close = () => setAction(null);
 
   const list = useMemo(() => {
     const term = filter.trim().toLowerCase();
-    const all = users.data ?? [];
+    const all = (users.data ?? []).filter((u) => !roleFilter || u.role === roleFilter);
     const filtered = term
       ? all.filter((u) => [u.username, u.displayName, u.email ?? '', u.role].some((v) => v.toLowerCase().includes(term)))
       : all;
     return [...filtered].sort((a, b) => Number(b.active) - Number(a.active) || a.displayName.localeCompare(b.displayName));
-  }, [users.data, filter]);
+  }, [users.data, filter, roleFilter]);
 
   const userFor = (kind: NonNullable<Action>['kind']): AdminUser | null => (action && action.kind === kind && 'user' in action ? action.user : null);
 
@@ -77,18 +79,25 @@ export function UsersAdmin() {
   return (
     <>
       <PageHeader
-        eyebrow="Administration"
-        title="Users"
-        description="Accounts, roles and sessions. Changes take effect on the user's very next request."
+        eyebrow="Administration / Directory"
+        title="The people behind the work."
+        description="Manage accounts, roles and active sessions. Every change leaves a record."
         actions={
           <Button variant="primary" leftIcon={<UserPlus className="h-4 w-4" />} onClick={() => setAction({ kind: 'create' })}>
             New user
           </Button>
         }
       />
+      {users.data && <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        {ROLES.map((role) => <button key={role} type="button" aria-label={`Filter ${role.toLowerCase()} accounts`} aria-pressed={roleFilter === role} onClick={() => setRoleFilter(roleFilter === role ? null : role)} className={`rounded-2xl border p-5 text-left shadow-card transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${roleFilter === role ? 'border-brand-300 bg-brand-50' : 'border-slate-200/70 bg-white hover:border-brand-200'}`}>
+          <div className="flex items-center justify-between"><RoleBadge value={role} /><Users className="h-4 w-4 text-brand-500" /></div>
+          <p className="mt-3 font-display text-3xl font-semibold text-ink">{formatNumber(users.data.filter((u) => u.role === role).length)}</p>
+          <p className="mt-2 text-xs text-slate-500">{role === 'ADMIN' ? 'System oversight. No implicit file access.' : role === 'OWNER' ? 'Upload, organise and control sharing.' : 'Named access to shared documents.'}</p>
+        </button>)}
+      </div>}
       <Card className="overflow-hidden">
-        <div className="border-b border-slate-100 p-3">
-          <div className="max-w-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5">
+          <div className="w-full max-w-sm">
             <Input
               type="search"
               aria-label="Filter users"
@@ -98,13 +107,14 @@ export function UsersAdmin() {
               onChange={(e) => setFilter(e.target.value)}
             />
           </div>
+          <div className="flex items-center gap-3 text-xs text-slate-500">{users.data && <span>{formatNumber(list.length)} accounts</span>}{roleFilter && <Button size="sm" variant="ghost" onClick={() => setRoleFilter(null)}>Clear role filter</Button>}</div>
         </div>
         {users.isPending ? (
           <SkeletonRows rows={6} cols={7} />
         ) : users.isError ? (
           <ErrorState error={users.error} onRetry={() => void users.refetch()} title="Could not load users" />
         ) : list.length === 0 ? (
-          <EmptyState icon={<Users className="h-5 w-5" />} title={filter ? 'No users match your filter' : 'No users yet'} />
+          <EmptyState icon={<Users className="h-5 w-5" />} title={filter || roleFilter ? 'No users match your filter' : 'No users yet'} />
         ) : (
           <Table>
             <THead>

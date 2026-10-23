@@ -40,7 +40,13 @@ API on PostgreSQL with a React single-page app.
 - **Tests:**
   - 139 backend tests against real PostgreSQL;
   - a mutation script that removes 9 individual authorisation checks and confirms that the suite fails each time;
-  - 58 frontend tests.
+  - frontend unit/component tests, including role landing, grid/list actions, combined search filters and grant editing.
+
+The workspace was redesigned with self-hosted Poppins and Outfit typography, an evergreen sidebar, an overview
+for owners/viewers, visible shared-file and recovery navigation, and grid/list document browsing. The administrator
+lands on system activity instead of an intentionally empty document library. A role-specific workspace guide
+explains where each operation lives. Existing grants now have an explicit edit action for permission and expiry.
+The redesign does not add any backend endpoint, public link, document preview or authorisation bypass.
 
 ## Permission model, in my own words
 

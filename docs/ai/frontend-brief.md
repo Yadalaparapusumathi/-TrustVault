@@ -3,7 +3,12 @@
 Reused whenever I asked an agent to add or change a screen. The full contract is `docs/API.md`.
 
 - Stack: Vite, React 18, TypeScript (strict), Tailwind v3, react-router, @tanstack/react-query, lucide-react,
-  sonner, Inter variable font. No component library; hand-built primitives in `src/components/ui`.
+  sonner, self-hosted Poppins headings and Outfit variable body font. No component library; hand-built primitives
+  in `src/components/ui`. The visual system uses an evergreen sidebar, light neutral canvas and lime accents.
+- Navigation: role-aware overview after sign-in; preserve safe deep links and forced password changes.
+  Owners/viewers use `/workspace`; admins use `/admin`. Named access is never inferred from an admin role.
+- All displayed totals must come from authorised API results, never fictional dashboard figures or a page's length.
+  Both document grid and table views must use the same API actions and permission-aware controls.
 - Security rules for the client:
   - The client never decides access. Hide buttons for UX only; always handle 401/403/404/409 from the server.
   - CSRF: read the `XSRF-TOKEN` cookie, send it as `X-XSRF-TOKEN` on every non-GET; fetch `/api/auth/csrf` first.

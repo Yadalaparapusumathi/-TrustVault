@@ -1,4 +1,10 @@
+import type { Role } from '@/api/types';
+
 export const DEFAULT_AFTER_LOGIN = '/documents';
+
+export function homeForRole(role: Role): string {
+  return role === 'ADMIN' ? '/admin' : '/workspace';
+}
 
 /**
  * Validates a `next` redirect target to prevent open redirects.

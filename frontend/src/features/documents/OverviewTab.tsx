@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
-import { AlertTriangle, FileText, Pencil, RotateCw } from 'lucide-react';
+import { AlertTriangle, FileText, LockKeyhole, Pencil, RotateCw } from 'lucide-react';
 import { ApiError } from '@/api/errors';
 import { CLASSIFICATIONS, type Classification, type DocumentDetail, type UpdateDocumentRequest } from '@/api/types';
 import { ClassificationBadge } from '@/components/domain/badges';
@@ -56,28 +56,38 @@ export function OverviewTab({ doc, onReload }: { doc: DocumentDetail; onReload: 
         </CardBody>
       </Card>
 
-      <Card>
-        <CardHeader title="File" description={`Current version v${doc.currentVersion}`} />
-        <CardBody>
-          <dl className="space-y-4">
-            <Meta label="Original filename">
-              <span className="break-all">{doc.originalFilename}</span>
-            </Meta>
-            <Meta label="Size">{formatBytes(doc.sizeBytes)}</Meta>
-            <Meta label="Content type">
-              <span className="font-mono text-xs">{doc.contentType}</span>
-            </Meta>
-            <Meta label="SHA-256">
-              <div className="flex items-start gap-1">
-                <code className="block min-w-0 flex-1 break-all rounded-md bg-slate-50 px-2 py-1.5 font-mono text-[11px] leading-relaxed text-slate-700 ring-1 ring-inset ring-slate-200">
-                  {doc.sha256}
-                </code>
-                <CopyButton value={doc.sha256} label="Copy SHA-256" />
-              </div>
-            </Meta>
-          </dl>
-        </CardBody>
-      </Card>
+      <div className="space-y-5">
+        <Card>
+          <CardHeader title="File" description={`Current version v${doc.currentVersion}`} />
+          <CardBody>
+            <dl className="space-y-4">
+              <Meta label="Original filename">
+                <span className="break-all">{doc.originalFilename}</span>
+              </Meta>
+              <Meta label="Size">{formatBytes(doc.sizeBytes)}</Meta>
+              <Meta label="Content type">
+                <span className="font-mono text-xs">{doc.contentType}</span>
+              </Meta>
+              <Meta label="SHA-256">
+                <div className="flex items-start gap-1">
+                  <code className="block min-w-0 flex-1 break-all rounded-md bg-slate-50 px-2 py-1.5 font-mono text-[11px] leading-relaxed text-slate-700 ring-1 ring-inset ring-slate-200">
+                    {doc.sha256}
+                  </code>
+                  <CopyButton value={doc.sha256} label="Copy SHA-256" />
+                </div>
+              </Meta>
+            </dl>
+          </CardBody>
+        </Card>
+        <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-5">
+          <LockKeyhole className="mb-3 h-5 w-5 text-brand-600" />
+          <h3 className="text-sm font-semibold text-brand-900">A file, not a public link.</h3>
+          <p className="mt-2 text-xs leading-relaxed text-brand-800/75">
+            Download to view this file. Untrusted documents are not rendered inside the application.
+            Every download is authorised and recorded.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

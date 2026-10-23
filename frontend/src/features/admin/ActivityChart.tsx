@@ -4,16 +4,16 @@ import { cn } from '@/lib/cn';
 import { parseIsoDate } from '@/lib/format';
 
 const SERIES = [
-  { key: 'uploads', label: 'Uploads', color: '#6366f1' },
-  { key: 'downloads', label: 'Downloads', color: '#0ea5e9' },
-  { key: 'permissionChanges', label: 'Permission changes', color: '#a855f7' },
+  { key: 'uploads', label: 'Uploads', color: '#18795e' },
+  { key: 'downloads', label: 'Downloads', color: '#a9cd5a' },
+  { key: 'permissionChanges', label: 'Permission changes', color: '#a78bfa' },
   { key: 'denied', label: 'Denied', color: '#f43f5e' },
 ] as const;
 
 type SeriesKey = (typeof SERIES)[number]['key'];
 
 const W = 720;
-const H = 240;
+const H = 270;
 const PAD = { top: 12, right: 8, bottom: 28, left: 36 };
 
 function niceMax(value: number): number {

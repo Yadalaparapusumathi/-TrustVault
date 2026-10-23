@@ -8,7 +8,13 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-slate-50 font-sans text-slate-900 antialiased;
+    @apply bg-canvas font-sans text-slate-900 antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+  button, a, input, select, textarea {
+    touch-action: manipulation;
   }
   ::selection {
     @apply bg-brand-100 text-brand-900;
@@ -19,6 +25,24 @@
   input[type='date']::-webkit-calendar-picker-indicator,
   input[type='datetime-local']::-webkit-calendar-picker-indicator {
     @apply cursor-pointer opacity-50 hover:opacity-80;
+  }
+}
+
+@layer components {
+  .workspace-hero {
+    background:
+      radial-gradient(ellipse at 92% 18%, rgb(220 249 139 / 0.12), transparent 50%),
+      linear-gradient(120deg, #173d32, #0b2924);
+    @apply relative isolate overflow-hidden rounded-3xl text-white;
+  }
+  .eyebrow {
+    @apply text-[10px] font-semibold uppercase tracking-[0.18em];
+  }
+  .nav-link {
+    @apply flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime;
+  }
+  .route-link {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-soft transition-colors hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2;
   }
 }
 

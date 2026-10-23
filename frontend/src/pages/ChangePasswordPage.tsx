@@ -12,6 +12,7 @@ import { Card } from '@/components/ui/Card';
 import { Field, Input } from '@/components/ui/Input';
 import { notifyError } from '@/lib/notify';
 import { MIN_PASSWORD_LENGTH } from '@/lib/password';
+import { homeForRole } from '@/lib/redirect';
 
 export default function ChangePasswordPage() {
   const me = useMe();
@@ -44,7 +45,7 @@ export default function ChangePasswordPage() {
       await authApi.changePassword({ currentPassword: form.currentPassword, newPassword: form.newPassword });
       await refresh();
       toast.success('Password changed', { description: 'All your other sessions were signed out.' });
-      navigate('/documents', { replace: true });
+      navigate(homeForRole(me.role), { replace: true });
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.errors).length) setErrors(err.errors);
       else if (err instanceof ApiError && err.status === 400) setErrors({ newPassword: err.userMessage });

@@ -62,18 +62,6 @@ export function DocumentsTable({
       <TBody>
         {documents.map((doc) => {
           const href = `/documents/${encodeURIComponent(doc.id)}`;
-          const items: MenuItem[] = inTrash
-            ? [
-                { key: 'restore', label: 'Restore', icon: <ArchiveRestore className="h-4 w-4" />, onSelect: () => actions.onRestore(doc) },
-                { key: 'purge', label: 'Delete permanently', icon: <Trash2 className="h-4 w-4" />, danger: true, separated: true, onSelect: () => actions.onPurge(doc) },
-              ]
-            : [
-                { key: 'download', label: 'Download', icon: <Download className="h-4 w-4" />, onSelect: () => actions.onDownload(doc) },
-                { key: 'open', label: 'Open', icon: <ExternalLink className="h-4 w-4" />, onSelect: () => navigate(href) },
-                ...(doc.myPermission === 'OWNER'
-                  ? [{ key: 'trash', label: 'Move to trash', icon: <Trash2 className="h-4 w-4" />, danger: true, separated: true, onSelect: () => actions.onTrash(doc) }]
-                  : []),
-              ];
           return (
             <TR
               key={doc.id}
@@ -125,20 +113,7 @@ export function DocumentsTable({
                 )}
               </TD>
               <TD className="w-12 pr-3 text-right">
-                {downloadingId === doc.id ? (
-                  <span className="inline-flex h-8 w-8 items-center justify-center">
-                    <Spinner size="sm" label="Downloading" />
-                  </span>
-                ) : (
-                  <DropdownMenu
-                    items={items}
-                    trigger={(props) => (
-                      <Button {...props} variant="ghost" size="icon-sm" aria-label={`Actions for ${doc.name}`}>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    )}
-                  />
-                )}
+                <DocumentActions doc={doc} inTrash={inTrash} actions={actions} downloading={downloadingId === doc.id} />
               </TD>
             </TR>
           );
@@ -146,4 +121,22 @@ export function DocumentsTable({
       </TBody>
     </Table>
   );
+}
+
+export function DocumentActions({ doc, inTrash, actions, downloading }: { doc: DocumentSummary; inTrash: boolean; actions: RowActions; downloading: boolean }) {
+  const navigate = useNavigate();
+  const items: MenuItem[] = inTrash
+    ? [
+        { key: 'restore', label: 'Restore', icon: <ArchiveRestore className="h-4 w-4" />, onSelect: () => actions.onRestore(doc) },
+        { key: 'purge', label: 'Delete permanently', icon: <Trash2 className="h-4 w-4" />, danger: true, separated: true, onSelect: () => actions.onPurge(doc) },
+      ]
+    : [
+        { key: 'download', label: 'Download', icon: <Download className="h-4 w-4" />, onSelect: () => actions.onDownload(doc) },
+        { key: 'open', label: 'Open', icon: <ExternalLink className="h-4 w-4" />, onSelect: () => navigate(`/documents/${encodeURIComponent(doc.id)}`) },
+        ...(doc.myPermission === 'OWNER'
+          ? [{ key: 'trash', label: 'Move to trash', icon: <Trash2 className="h-4 w-4" />, danger: true, separated: true, onSelect: () => actions.onTrash(doc) }]
+          : []),
+      ];
+  if (downloading) return <span className="inline-flex h-8 w-8 items-center justify-center"><Spinner size="sm" label="Downloading" /></span>;
+  return <DropdownMenu items={items} trigger={(props) => <Button {...props} variant="ghost" size="icon-sm" aria-label={`Actions for ${doc.name}`}><MoreHorizontal className="h-4 w-4" /></Button>} />;
 }

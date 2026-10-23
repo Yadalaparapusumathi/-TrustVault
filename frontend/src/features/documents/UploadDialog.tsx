@@ -103,7 +103,7 @@ function UploadDialogInner({ onClose }: { onClose: () => void }) {
       dismissible={!busy}
       size="lg"
       title="Upload document"
-      description="Files are scanned and fingerprinted (SHA-256) on upload. Only you have access until you share it."
+      description="File types and content are validated, encrypted and fingerprinted (SHA-256). Only you have access until you share it."
       footer={
         <>
           <Button

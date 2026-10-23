@@ -189,3 +189,26 @@ the container class moved package (`org.testcontainers.postgresql.PostgreSQLCont
 
 **Did instead:** pinned `testcontainers.version` to 2.0.5 with a comment explaining why, and used the 2.x names.
 [a68ac05](../../commit/a68ac05).
+
+## 11. 2026-10-22: Workspace redesign exposed a combined-search race
+
+**Asked:** Completely redesign the UI with Poppins/Outfit fonts, make role-specific functionality discoverable,
+and compare it with the original confidential-document requirements. Keep server-side access checks intact.
+
+**Produced:** A new visual system, personal and administrative landing pages, explicit navigation to shared files
+and recovery, grid/list browsing, a workspace guide, and a named-grant permission/expiry editor using the existing API.
+
+**What was wrong:** A new interaction test changed the document name and owner filters together. Both debounce
+callbacks ran in the same render cycle, but React Router's `setSearchParams` callback does not queue updates like
+React state. The owner update overwrote the name filter. The initial font import also assumed an Outfit
+`latin.css` export that the package does not supply; the production build caught it. Browser inspection showed a
+document-header status strip incorrectly nested inside its horizontal action row.
+
+**Did instead:** Merge pending library filter updates against a ref synchronised with navigation; the regression
+test asserts that name, owner, category, dates and sort are sent together to the server. Import Outfit through its
+actual package entry point and self-host both fonts. Move the status strip below the header row. Interaction tests
+also exercise role landing, preservation of deep links and forced password changes, grid/list controls, and
+explicit grant updates including server rejection. The browser's existing audit-chain mismatch warning was not
+hidden or "fixed" by modifying historical events.
+
+**Commit:** Pending; these edits have not been committed. No historical commit link is invented.

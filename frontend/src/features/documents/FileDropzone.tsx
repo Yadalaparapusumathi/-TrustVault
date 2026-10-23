@@ -72,12 +72,12 @@ export function FileDropzone({
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         className={cn(
-          'flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors',
+          'flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-colors',
           'focus-within:ring-2 focus-within:ring-brand-500 focus-within:ring-offset-2',
-          dragging ? 'border-brand-400 bg-brand-50/60' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50',
+          dragging ? 'border-brand-400 bg-brand-100/60' : 'border-brand-200 bg-brand-50/40 hover:border-brand-300 hover:bg-brand-50',
         )}
       >
-        <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-brand-600 shadow-soft ring-1 ring-slate-200">
+        <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-brand-600 shadow-card ring-1 ring-brand-100">
           <UploadCloud className="h-5 w-5" aria-hidden />
         </span>
         <span className="text-sm font-medium text-slate-900">
@@ -117,7 +117,7 @@ export function UploadProgress({ progress }: { progress: number }) {
         <span className="tabular-nums">{pct}%</span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Upload progress">
-        <div className="h-full rounded-full bg-gradient-to-r from-brand-500 to-violet-500 transition-[width] duration-200" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-brand-500 transition-[width] duration-200" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );

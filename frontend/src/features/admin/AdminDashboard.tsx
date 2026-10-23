@@ -1,4 +1,6 @@
-import { Ban, BarChart3, Download, FileText, KeyRound, ScrollText, ShieldAlert, Trash2, Users } from 'lucide-react';
+import { ArrowUpRight, Ban, BarChart3, Download, FileText, KeyRound, ScrollText, ShieldAlert, ShieldCheck, Trash2, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useMe } from '@/auth/AuthContext';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -13,10 +15,11 @@ import { StatCard } from './StatCard';
 
 export function AdminDashboard() {
   const dashboard = useDashboard();
+  const me = useMe();
 
   return (
     <>
-      <PageHeader eyebrow="Administration" title="Dashboard" description="Security posture and activity across TrustVault." />
+      <PageHeader eyebrow="Administration / Overview" title="The bigger picture." description={`Welcome back, ${me.displayName.split(' ')[0]}. Here is what is happening across TrustVault.`} actions={<Link to="/admin/audit" className="route-link">Explore audit trail <ArrowUpRight className="h-4 w-4" /></Link>} />
       {dashboard.isPending ? (
         <DashboardSkeleton />
       ) : dashboard.isError ? (
@@ -28,6 +31,12 @@ export function AdminDashboard() {
           const { totals, integrity, alerts, activityByDay, recentDenied, recentPermissionChanges } = dashboard.data;
           return (
             <div className="space-y-6">
+              <section className="workspace-hero flex flex-col justify-between gap-6 p-7 sm:flex-row sm:items-center">
+                <div className="max-w-xl"><p className="eyebrow mb-3 text-lime">Oversight without overreach</p><h2 className="text-2xl font-medium tracking-tight">Know what happened.<br />Prove who was there.</h2><p className="mt-3 text-sm leading-relaxed text-white/60">Monitor activity, manage people and inspect the evidence. Your admin role never gives you implicit access to their documents.</p></div>
+                <div className="flex shrink-0 items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.05] p-5">
+                  <ShieldCheck className="h-9 w-9 text-lime" strokeWidth={1.3} /><div><p className="font-display text-2xl font-medium text-white">{formatNumber(totals.events24h)}</p><p className="mt-1 text-xs text-white/50">events recorded in 24 hours</p></div>
+                </div>
+              </section>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard
                   label="Users"
@@ -69,7 +78,7 @@ export function AdminDashboard() {
                 <div className="space-y-6 xl:col-span-2">
                   <IntegrityCard report={integrity} />
                   <Card>
-                    <CardHeader title="Activity" description="Last 14 days" icon={<BarChart3 className="h-4 w-4" />} />
+                    <CardHeader title="The activity pulse" description="Uploads, downloads, permission changes and denials over 14 days." icon={<BarChart3 className="h-4 w-4" />} />
                     <CardBody>
                       <ActivityChart data={activityByDay} />
                     </CardBody>

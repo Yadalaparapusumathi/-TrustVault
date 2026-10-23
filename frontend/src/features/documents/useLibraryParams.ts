@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CLASSIFICATIONS, type Classification, type DocumentScope, type DocumentSearchParams, type DocumentSortField, type SortDirection } from '@/api/types';
 
@@ -26,6 +26,10 @@ const FILTER_KEYS: FilterKey[] = ['q', 'owner', 'category', 'classification', 'f
 /** Library state lives in the URL so it survives reloads and can be shared/bookmarked. */
 export function useLibraryParams() {
   const [params, setParams] = useSearchParams();
+  const latestParams = useRef(params);
+  useLayoutEffect(() => {
+    latestParams.current = params;
+  }, [params]);
 
   const filters = useMemo<LibraryFilters>(() => {
     const scopeRaw = params.get('scope');
@@ -51,21 +55,18 @@ export function useLibraryParams() {
 
   const update = useCallback(
     (changes: Record<string, string | number | null>, resetPage = true) => {
-      setParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          for (const [k, v] of Object.entries(changes)) {
-            if (v === null || v === '' || (k === 'page' && v === 0) || (k === 'scope' && v === 'all') || (k === 'sort' && v === 'updatedAt,desc')) {
-              next.delete(k);
-            } else {
-              next.set(k, String(v));
-            }
-          }
-          if (resetPage && !('page' in changes)) next.delete('page');
-          return next;
-        },
-        { replace: true },
-      );
+      // Router search-param updates are not queued like setState; merge simultaneous debounced edits.
+      const next = new URLSearchParams(latestParams.current);
+      for (const [k, v] of Object.entries(changes)) {
+        if (v === null || v === '' || (k === 'page' && v === 0) || (k === 'scope' && v === 'all') || (k === 'sort' && v === 'updatedAt,desc')) {
+          next.delete(k);
+        } else {
+          next.set(k, String(v));
+        }
+      }
+      if (resetPage && !('page' in changes)) next.delete('page');
+      latestParams.current = next;
+      setParams(next, { replace: true });
     },
     [setParams],
   );
@@ -74,6 +75,7 @@ export function useLibraryParams() {
   const clearFilters = useCallback(() => update(Object.fromEntries(FILTER_KEYS.map((k) => [k, null]))), [update]);
   const setScope = useCallback((scope: DocumentScope) => update({ scope }), [update]);
   const setPage = useCallback((page: number) => update({ page }, false), [update]);
+  const setSort = useCallback((field: DocumentSortField, direction: SortDirection) => update({ sort: `${field},${direction}` }), [update]);
   const toggleSort = useCallback(
     (field: DocumentSortField) => {
       const dir: SortDirection =
@@ -101,5 +103,5 @@ export function useLibraryParams() {
     [filters],
   );
 
-  return { filters, apiParams, hasFilters, setFilter, clearFilters, setScope, setPage, toggleSort };
+  return { filters, apiParams, hasFilters, setFilter, clearFilters, setScope, setPage, toggleSort, setSort };
 }

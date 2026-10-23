@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { FileDown, ScrollText, Search, X } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { ArrowUpRight, FileDown, Fingerprint, ScrollText, Search, X } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { adminApi } from '@/api/admin';
 import { AUDIT_OUTCOMES, type AuditEvent, type AuditOutcome, type AuditSearchParams } from '@/api/types';
 import { actorLabel, targetLabel } from '@/lib/audit';
 import { OutcomeBadge } from '@/components/domain/badges';
+import { ActionIcon } from '@/components/domain/audit';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -88,17 +89,29 @@ export function AuditLog() {
   return (
     <>
       <PageHeader
-        eyebrow="Administration"
-        title="Audit log"
-        description="Tamper-evident record of every security-relevant event, newest first."
+        eyebrow="Administration / Evidence"
+        title="Nothing happens unnoticed."
+        description="The audit trail: a tamper-evident record of actions, access and refused attempts."
         actions={
           <Button variant="secondary" leftIcon={<FileDown className="h-4 w-4" />} onClick={() => void exportCsv()} loading={exporting}>
             Export CSV
           </Button>
         }
       />
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-100 bg-brand-50/70 p-5">
+        <div className="flex items-start gap-3"><Fingerprint className="h-6 w-6 shrink-0 text-brand-600" strokeWidth={1.5} /><div><p className="text-sm font-medium text-brand-900">Evidence, not just an event list.</p><p className="mt-1 text-xs leading-relaxed text-brand-800/75">Events are append-only and HMAC-chained. Open a row for the actor, request and recorded details.</p></div></div>
+        <Link to="/admin" className="inline-flex items-center gap-1.5 rounded text-xs font-medium text-brand-700 hover:underline focus-visible:ring-2 focus-visible:ring-brand-500">Verify integrity in overview <ArrowUpRight className="h-3.5 w-3.5" /></Link>
+      </div>
       <Card className="overflow-hidden">
-        <div className="grid grid-cols-1 gap-2.5 border-b border-slate-100 p-3 sm:grid-cols-2 lg:grid-cols-12" role="search" aria-label="Filter audit events">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5">
+          <div><h2 className="text-sm font-semibold text-ink">Audit events</h2><p className="mt-1 text-xs text-slate-400">Newest first. Filters apply to CSV exports too.</p></div>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Quick audit filters">
+            <Button size="sm" variant={!filters.action && !filters.outcome ? 'primary' : 'secondary'} onClick={() => update({ action: '', outcome: '' })}>All activity</Button>
+            <Button size="sm" variant={filters.outcome === 'DENIED' ? 'primary' : 'secondary'} onClick={() => update({ action: '', outcome: 'DENIED' })}>Denied attempts</Button>
+            <Button size="sm" variant={filters.action === 'GRANT_REVOKED' ? 'primary' : 'secondary'} onClick={() => update({ action: 'GRANT_REVOKED', outcome: '' })}>Revocations</Button>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-3 border-b border-slate-100 p-5 sm:grid-cols-2 lg:grid-cols-12" role="search" aria-label="Filter audit events">
           <div className="lg:col-span-2">
             <DebouncedInput
               aria-label="Actor username"
@@ -198,7 +211,7 @@ export function AuditLog() {
                     <TD className="whitespace-nowrap">
                       <span className={e.actor ? 'font-medium text-slate-800' : 'italic text-slate-400'}>{actorLabel(e)}</span>
                     </TD>
-                    <TD className="whitespace-nowrap font-mono text-xs text-slate-700">{e.action}</TD>
+                    <TD className="whitespace-nowrap text-xs text-slate-700"><span className="flex items-center gap-2"><ActionIcon action={e.action} outcome={e.outcome} /><span>{humanizeEnum(e.action)}</span></span></TD>
                     <TD>
                       <OutcomeBadge value={e.outcome} />
                     </TD>

@@ -4,7 +4,7 @@ import type { DocumentDetail } from '@/api/types';
 import { UserCell } from '@/components/domain/UserCell';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Card, CardHeader } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { RelativeTime } from '@/components/ui/RelativeTime';
@@ -19,6 +19,7 @@ export function VersionsTab({ doc }: { doc: DocumentDetail }) {
 
   return (
     <Card className="overflow-hidden">
+      <CardHeader title="Every version, accounted for" description="Previous files stay in the history. Download access is checked for each version." icon={<History className="h-4 w-4" />} />
       {versions.isPending ? (
         <SkeletonRows rows={3} cols={5} />
       ) : versions.isError ? (

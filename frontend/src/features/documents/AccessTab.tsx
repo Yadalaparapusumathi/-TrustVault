@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Clock, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { Clock, Pencil, ShieldCheck, UserPlus, Users } from 'lucide-react';
 import { ApiError } from '@/api/errors';
 import { PERMISSIONS, type DocumentDetail, type Grant, type Permission, type UserSummary } from '@/api/types';
 import { useMe } from '@/auth/AuthContext';
@@ -8,6 +8,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Dialog } from '@/components/ui/Dialog';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Field, Input, Select } from '@/components/ui/Input';
@@ -23,6 +24,7 @@ export function AccessTab({ doc }: { doc: DocumentDetail }) {
   const grants = useGrants(doc.id);
   const revoke = useRevokeGrant(doc.id);
   const [revokeTarget, setRevokeTarget] = useState<Grant | null>(null);
+  const [editTarget, setEditTarget] = useState<Grant | null>(null);
   const grantedIds = (grants.data ?? []).map((g) => g.grantee.id);
 
   return (
@@ -73,6 +75,9 @@ export function AccessTab({ doc }: { doc: DocumentDetail }) {
                   </div>
                   <div className="flex items-center gap-2 pl-11 sm:pl-0">
                     <PermissionBadge value={g.permission} />
+                    <Button size="sm" leftIcon={<Pencil className="h-3 w-3" />} onClick={() => setEditTarget(g)} aria-label={`Edit access for ${g.grantee.displayName}`}>
+                      Edit
+                    </Button>
                     <Button size="sm" variant="outline-danger" onClick={() => setRevokeTarget(g)}>
                       Revoke
                     </Button>
@@ -89,6 +94,10 @@ export function AccessTab({ doc }: { doc: DocumentDetail }) {
       <div className="xl:col-span-2">
         <ShareForm doc={doc} />
       </div>
+
+      <Dialog open={editTarget !== null} onClose={() => setEditTarget(null)} title="Edit document access" description="Change the permission or expiry for this person. The change is applied on their next request and recorded in the audit trail.">
+        {editTarget && <ShareForm key={editTarget.id} doc={doc} grant={editTarget} onDone={() => setEditTarget(null)} />}
+      </Dialog>
 
       <ConfirmDialog
         open={revokeTarget !== null}
@@ -111,25 +120,25 @@ export function AccessTab({ doc }: { doc: DocumentDetail }) {
   );
 }
 
-function nowLocalInputValue(): string {
-  const d = new Date(Date.now() + 60_000);
+function localInputValue(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function ShareForm({ doc }: { doc: DocumentDetail }) {
+function ShareForm({ doc, grant, onDone }: { doc: DocumentDetail; grant?: Grant; onDone?: () => void }) {
   const me = useMe();
   const create = useCreateGrant(doc.id);
-  const [user, setUser] = useState<UserSummary | null>(null);
-  const [permission, setPermission] = useState<Permission>('READ');
-  const [expires, setExpires] = useState('');
+  const [user, setUser] = useState<UserSummary | null>(grant?.grantee ?? null);
+  const [permission, setPermission] = useState<Permission>(grant?.permission ?? 'READ');
+  const initialExpires = grant?.expiresAt ? localInputValue(new Date(grant.expiresAt)) : '';
+  const [expires, setExpires] = useState(initialExpires);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const next: Record<string, string> = {};
     if (!user) next.userId = 'Choose a person to share with.';
-    const expiresAt = localDateTimeToIso(expires);
+    const expiresAt = grant && expires === initialExpires ? grant.expiresAt ?? undefined : localDateTimeToIso(expires);
     if (expires && (!expiresAt || new Date(expiresAt).getTime() <= Date.now())) next.expiresAt = 'Expiry must be in the future.';
     setErrors(next);
     if (!user || Object.keys(next).length) return;
@@ -141,6 +150,7 @@ function ShareForm({ doc }: { doc: DocumentDetail }) {
           setUser(null);
           setExpires('');
           setPermission('READ');
+          onDone?.();
         },
         onError: (err) => {
           if (err instanceof ApiError && Object.keys(err.errors).length) setErrors(err.errors);
@@ -152,10 +162,10 @@ function ShareForm({ doc }: { doc: DocumentDetail }) {
 
   return (
     <Card>
-      <CardHeader title="Share" description="Grant someone access. Only you, the owner, can share." icon={<UserPlus className="h-4 w-4" />} />
+      {!grant && <CardHeader title="Invite someone in" description="A named person. A specific permission. Always your decision." icon={<UserPlus className="h-4 w-4" />} />}
       <CardBody>
         <form onSubmit={submit} className="space-y-4" noValidate>
-          <Field id="share-user" label="Person" error={errors.userId}>
+          {grant ? <div className="flex items-center gap-3 rounded-xl bg-brand-50 p-3"><Avatar name={grant.grantee.displayName} seed={grant.grantee.id} /><div><p className="text-sm font-medium text-ink">{grant.grantee.displayName}</p><p className="text-xs text-slate-500">@{grant.grantee.username}</p></div></div> : <Field id="share-user" label="Person" error={errors.userId}>
             <UserPicker
               id="share-user"
               value={user}
@@ -167,14 +177,14 @@ function ShareForm({ doc }: { doc: DocumentDetail }) {
               invalid={!!errors.userId}
               describedBy={errors.userId ? 'share-user-error' : undefined}
             />
-          </Field>
+          </Field>}
           <Field
-            id="share-permission"
+            id={grant ? 'edit-share-permission' : 'share-permission'}
             label="Permission"
             error={errors.permission}
             hint={permission === 'EDIT' ? 'Can view, download, edit details and upload new versions.' : 'Can view details and download any version.'}
           >
-            <Select id="share-permission" value={permission} onChange={(e) => setPermission(e.target.value as Permission)}>
+            <Select id={grant ? 'edit-share-permission' : 'share-permission'} value={permission} disabled={create.isPending} onChange={(e) => setPermission(e.target.value as Permission)}>
               {PERMISSIONS.map((p) => (
                 <option key={p} value={p}>
                   {p === 'READ' ? 'Read' : 'Edit'}
@@ -183,17 +193,18 @@ function ShareForm({ doc }: { doc: DocumentDetail }) {
             </Select>
           </Field>
           <Field
-            id="share-expires"
+            id={grant ? 'edit-share-expires' : 'share-expires'}
             label="Expires"
             optional
             error={errors.expiresAt}
             hint={expires ? `Access ends ${formatDateTime(new Date(expires))}.` : 'Leave empty for access until revoked.'}
           >
             <Input
-              id="share-expires"
+              id={grant ? 'edit-share-expires' : 'share-expires'}
               type="datetime-local"
               value={expires}
-              min={nowLocalInputValue()}
+              min={localInputValue(new Date(Date.now() + 60_000))}
+              disabled={create.isPending}
               onChange={(e) => {
                 setExpires(e.target.value);
                 setErrors((x) => ({ ...x, expiresAt: '' }));
@@ -202,7 +213,7 @@ function ShareForm({ doc }: { doc: DocumentDetail }) {
             />
           </Field>
           <Button type="submit" variant="primary" className="w-full" loading={create.isPending} leftIcon={<UserPlus className="h-4 w-4" />}>
-            Grant access
+            {grant ? 'Save access changes' : 'Grant access'}
           </Button>
         </form>
       </CardBody>

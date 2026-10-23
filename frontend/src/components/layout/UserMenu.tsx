@@ -39,11 +39,11 @@ export function UserMenu() {
           type="button"
           {...props}
           aria-label="Account menu"
-          className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-slate-200/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime"
         >
           <Avatar name={me.displayName} seed={me.id} size="md" />
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-medium text-slate-900">{me.displayName}</span>
+            <span className="block truncate text-sm font-medium text-white">{me.displayName}</span>
             <span className="mt-0.5 block">
               <RoleBadge value={me.role} />
             </span>

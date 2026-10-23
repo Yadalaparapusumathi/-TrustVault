@@ -31,7 +31,7 @@ export function Dialog({ open, onClose, title, description, icon, children, foot
   if (!open) return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-6">
-      <div className="absolute inset-0 animate-fade-in bg-slate-950/40 backdrop-blur-[2px]" aria-hidden onMouseDown={close} />
+      <div className="absolute inset-0 animate-fade-in bg-brand-950/50 backdrop-blur-sm" aria-hidden onMouseDown={close} />
       <div
         ref={ref}
         role="dialog"
@@ -40,14 +40,14 @@ export function Dialog({ open, onClose, title, description, icon, children, foot
         aria-describedby={description ? descId : undefined}
         tabIndex={-1}
         className={cn(
-          'relative flex max-h-[92vh] w-full animate-scale-in flex-col rounded-t-2xl bg-white shadow-pop ring-1 ring-slate-900/5 focus:outline-none sm:rounded-2xl',
+          'relative flex max-h-[92vh] w-full animate-scale-in flex-col rounded-t-3xl bg-white shadow-pop ring-1 ring-slate-900/5 focus:outline-none sm:rounded-3xl',
           widths[size],
         )}
       >
-        <div className="flex items-start gap-3 px-6 pb-2 pt-5">
+        <div className="flex items-start gap-3 px-6 pb-3 pt-6">
           {icon && <div className="mt-0.5 shrink-0">{icon}</div>}
           <div className="min-w-0 flex-1">
-            <h2 id={titleId} className="text-base font-semibold text-slate-900">
+            <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
               {title}
             </h2>
             {description && (

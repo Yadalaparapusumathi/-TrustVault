@@ -53,6 +53,16 @@ These accounts are seeded on an empty database when the `dev` profile is active,
 | Owner | `alice` (also `bob`, `erin`) | `Owner#Vault2026` |
 | Viewer | `carol` (also `dave`, `frank`) | `Viewer#Vault2026` |
 
+When running the frontend with `npm run dev`, the sign-in page shows **Local test accounts**.
+Select a username to fill in its default credentials, then click **Sign in**. These shortcuts use normal
+backend authentication; they do not bypass permissions and are omitted from production builds.
+If you override `TV_SEED_PASSWORD_*`, replace the filled password with your configured value.
+Seeding only runs when there are no users: restarting never resets existing passwords or adds missing demo users.
+
+Start with `alice` for documents, uploads, versions and sharing; use `carol` for the read-only shared-document
+experience, or `frank` to try a viewer with an EDIT grant. Sign in as `admin` and use the sidebar for
+the dashboard, users and audit pages. An empty document library for the admin is intentional.
+
 The seeded state makes the boundaries easy to try out:
 - Alice shares her salary letter with Carol only.
 - Frank can see Erin's drawing but nothing of Alice's.
@@ -115,6 +125,30 @@ npm run dev
 Open http://localhost:5173. Vite proxies `/api` to `localhost:8080`, so the browser sees one origin. This is the
 same arrangement as production, where nginx serves the SPA and proxies `/api`.
 
+### Finding the features
+
+The UI uses locally served **Poppins** headings and **Outfit** body text; it makes no font requests to third parties.
+Owners and viewers land on their personal overview; administrators land on the system overview.
+The question-mark button opens a guide tailored to the signed-in role.
+
+| Requirement | Where to use it |
+|---|---|
+| Authentication and three roles | Sign-in page; role shown in the workspace; password changes in the account menu |
+| Upload, organise and manage | Owners: **My documents → Upload document**; category/classification fields; grid or list view |
+| Search by name, owner, category and date | **All documents** filters, with sorting and pagination; filtering remains server-side |
+| Read/edit grants to named people | Open an owned document → **Access → Invite someone in** |
+| Change or revoke access | **Access → Edit / Revoke** on an existing grant; optional expiry |
+| Versions and downloads | Open a document → **Versions** or **Download**; EDIT grants allow a new version |
+| Delete and recover | **Move to trash**, then **Trash & recovery** for restore or permanent deletion |
+| Upload validation | Upload dialog feedback; server checks content/type/size rather than trusting the browser |
+| Document audit trail | Owners: document **Activity** tab, including refused requests |
+| Administrative oversight | Admin **Overview**, **Audit trail** (filters, event details, CSV), and **People & roles** |
+| Isolation tests | `backend/src/test/java/com/trustvault/security/DocumentIsolationTest.java` and `scripts/authz-mutation-check.py` |
+
+The overview counts come from authorised API results, not mock numbers or counts of a single page.
+There are intentionally no public links, inherited folder permissions or in-browser document previews.
+The UI is not an authorisation layer: all existing backend checks still apply to every request.
+
 ---
 
 ## Tests
@@ -123,7 +157,7 @@ same arrangement as production, where nginx serves the SPA and proxies `/api`.
 # Backend: 139 tests against a real PostgreSQL (Testcontainers, so needs a running Docker daemon)
 cd backend && mvn test
 
-# Frontend: lint, 58 unit/component tests, production build
+# Frontend: lint, unit/component tests, production build
 cd frontend && npm run lint && npm test -- --run && npm run build
 ```
 

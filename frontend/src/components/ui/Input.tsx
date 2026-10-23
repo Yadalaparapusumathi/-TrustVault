@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 const fieldBase =
-  'block w-full rounded-lg border bg-white text-sm text-slate-900 shadow-soft placeholder:text-slate-400 transition-colors ' +
+  'block w-full min-w-0 rounded-xl border bg-white text-sm text-slate-900 placeholder:text-slate-400 transition-colors ' +
   'focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500';
 
 function borderFor(invalid?: boolean) {
@@ -28,7 +28,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       <input
         ref={ref}
         aria-invalid={invalid || undefined}
-        className={cn(fieldBase, borderFor(invalid), 'h-9 px-3', leftIcon && 'pl-9', rightSlot && 'pr-10', className)}
+        className={cn(fieldBase, borderFor(invalid), 'h-11 px-3.5', leftIcon && 'pl-10', rightSlot && 'pr-10', className)}
         {...rest}
       />
       {rightSlot && <span className="absolute inset-y-0 right-0 flex items-center pr-1.5">{rightSlot}</span>}
@@ -61,7 +61,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
       <select
         ref={ref}
         aria-invalid={invalid || undefined}
-        className={cn(fieldBase, borderFor(invalid), 'h-9 appearance-none pl-3 pr-9', className)}
+        className={cn(fieldBase, borderFor(invalid), 'h-11 appearance-none pl-3.5 pr-9', className)}
         {...rest}
       >
         {children}

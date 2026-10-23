@@ -38,7 +38,7 @@ export function Tabs<T extends string>({ items, value, onChange, label, idPrefix
   };
 
   return (
-    <div role="tablist" aria-label={label} className={cn('flex gap-1 overflow-x-auto border-b border-slate-200', className)}>
+    <div role="tablist" aria-label={label} className={cn('flex gap-1 overflow-x-auto rounded-2xl border border-slate-200/70 bg-white p-1.5 shadow-soft', className)}>
       {items.map((item, index) => {
         const selected = item.value === value;
         return (
@@ -56,9 +56,9 @@ export function Tabs<T extends string>({ items, value, onChange, label, idPrefix
             onClick={() => onChange(item.value)}
             onKeyDown={(e) => onKeyDown(e, index)}
             className={cn(
-              'relative -mb-px inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500 rounded-t-md',
-              selected ? 'border-brand-600 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700',
+              'relative inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition-colors',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500',
+              selected ? 'bg-brand-50 text-brand-800' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700',
             )}
           >
             {item.icon}
