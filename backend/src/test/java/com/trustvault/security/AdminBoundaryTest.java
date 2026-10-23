@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
@@ -30,6 +31,7 @@ class AdminBoundaryTest extends IntegrationTest {
                 Arguments.of("audit export", get("/api/admin/audit/export")),
                 Arguments.of("audit verify", get("/api/admin/audit/verify")),
                 Arguments.of("list users", get("/api/admin/users")),
+                Arguments.of("delete user", delete("/api/admin/users/{id}", someone)),
                 Arguments.of("create user", post("/api/admin/users").contentType("application/json").content(
                         "{\"username\":\"evil\",\"displayName\":\"Evil\",\"role\":\"ADMIN\",\"temporaryPassword\":\"Evil-password-123\"}")),
                 Arguments.of("update user", patch("/api/admin/users/{id}", someone).contentType("application/json")

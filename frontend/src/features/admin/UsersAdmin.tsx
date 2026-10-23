@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowRightLeft, KeyRound, LogOut, MoreHorizontal, Pencil, Search, UserCheck, UserPlus, Users, UserX } from 'lucide-react';
+import { ArrowRightLeft, KeyRound, LogOut, MoreHorizontal, Pencil, Search, Trash2, UserCheck, UserPlus, Users, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import { ROLES, type AdminUser, type Role } from '@/api/types';
 import { useMe } from '@/auth/AuthContext';
@@ -20,11 +20,11 @@ import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/Table';
 import { useNow } from '@/lib/useNow';
 import { notifyError } from '@/lib/notify';
 import { formatNumber } from '@/lib/format';
-import { useAdminUsers, useRevokeSessions, useUpdateUser } from './hooks';
+import { useAdminUsers, useDeleteUser, useRevokeSessions, useUpdateUser } from './hooks';
 import { CreateUserDialog, EditUserDialog, ResetPasswordDialog, TransferDocumentsDialog } from './UserDialogs';
 
 type Action =
-  | { kind: 'edit' | 'deactivate' | 'reactivate' | 'reset' | 'revoke' | 'transfer'; user: AdminUser }
+  | { kind: 'edit' | 'deactivate' | 'reactivate' | 'reset' | 'revoke' | 'transfer' | 'delete'; user: AdminUser }
   | { kind: 'create' }
   | null;
 
@@ -50,6 +50,7 @@ export function UsersAdmin() {
   const users = useAdminUsers();
   const update = useUpdateUser();
   const revoke = useRevokeSessions();
+  const remove = useDeleteUser();
   const [action, setAction] = useState<Action>(null);
   const [filter, setFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState<Role | null>(null);
@@ -168,6 +169,15 @@ export function UsersAdmin() {
                         separated: true,
                         onSelect: () => setAction({ kind: 'reactivate', user: u }),
                       },
+                  {
+                    key: 'delete',
+                    label: 'Delete user',
+                    icon: <Trash2 className="h-4 w-4" />,
+                    danger: true,
+                    separated: true,
+                    disabled: isSelf,
+                    onSelect: () => setAction({ kind: 'delete', user: u }),
+                  },
                 ];
                 return (
                   <TR key={u.id} className={!u.active ? 'bg-slate-50/50' : undefined}>
@@ -217,6 +227,24 @@ export function UsersAdmin() {
       <ResetPasswordDialog user={userFor('reset')} onClose={close} />
       <TransferDocumentsDialog user={userFor('transfer')} users={users.data ?? []} onClose={close} />
 
+      <ConfirmDialog
+        open={userFor('delete') !== null}
+        tone="danger"
+        title={`Delete @${userFor('delete')?.username ?? ''}?`}
+        description="This permanently removes the account from the directory and blocks sign-in. Sessions are revoked. Historical user references and audit records are retained, and the username cannot be reused. Unlike deactivation, this cannot be undone."
+        requireText={userFor('delete')?.username}
+        confirmLabel="Delete user"
+        loading={remove.isPending}
+        onClose={close}
+        onConfirm={() => {
+          const u = userFor('delete');
+          if (u) remove.mutate(u, { onSuccess: close, onError: (e) => notifyError(e) });
+        }}
+      >
+        {(userFor('delete')?.ownedDocuments ?? 0) > 0 && (
+          <p role="alert">This user still owns documents, including any in trash. Use Transfer documents first; deletion will be refused until ownership is transferred.</p>
+        )}
+      </ConfirmDialog>
       <ConfirmDialog
         open={userFor('deactivate') !== null}
         tone="danger"

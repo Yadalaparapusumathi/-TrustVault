@@ -9,5 +9,3 @@ trustvault:
   seed:
     enabled: ${TV_SEED_ENABLED:true}
     password-admin: ${TV_SEED_PASSWORD_ADMIN:Admin#Vault2026}
-    password-owner: ${TV_SEED_PASSWORD_OWNER:Owner#Vault2026}
-    password-viewer: ${TV_SEED_PASSWORD_VIEWER:Viewer#Vault2026}

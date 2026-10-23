@@ -149,9 +149,10 @@ suggestion is marked `ACCEPTED`.
 | GET | `/api/admin/audit/actions` | `string[]` of known actions |
 | GET | `/api/admin/audit/export` | Same filters, `text/csv` (max 50 000 rows). Logged as `AUDIT_EXPORTED`. |
 | GET | `/api/admin/audit/verify` | `IntegrityReport` — recomputes the HMAC chain over the whole log |
-| GET | `/api/admin/users` | `AdminUser[]` |
+| GET | `/api/admin/users` | `AdminUser[]`, excluding deleted accounts (inactive accounts remain visible) |
 | POST | `/api/admin/users` | `{username, displayName, email?, role, temporaryPassword}` → `201 AdminUser`. User must change password at first login. |
 | PATCH | `/api/admin/users/{id}` | `{displayName?, email?, role?, active?}` → `AdminUser`. Deactivation kills all sessions at once. Cannot deactivate/demote yourself. Cannot demote an owner who still owns documents (transfer first). |
+| DELETE | `/api/admin/users/{id}` | `204`. Audit-preserving soft deletion: deactivates permanently, revokes sessions, removes from directory and user totals. `400` for self-deletion; `409` while any documents, including trash, are owned; `404` for unknown/already-deleted users. Transfer documents first. Username and historical references remain reserved; no reactivation/reset of deleted accounts. Successes and business refusals are audited as `USER_DELETED`; role/CSRF refusals use the security audit path. |
 | POST | `/api/admin/users/{id}/reset-password` | `{temporaryPassword}` → `204`; kills sessions; forces change at next login |
 | POST | `/api/admin/users/{id}/revoke-sessions` | `204` |
 | POST | `/api/admin/users/{id}/transfer-documents` | `{toUserId}` → `{transferred: number}`. Target must be an active `OWNER`. Admin gains no access. |
@@ -176,7 +177,7 @@ Dashboard = {
 `LOGIN_SUCCESS, LOGIN_FAILED, ACCOUNT_LOCKED, LOGOUT, PASSWORD_CHANGED, DOCUMENT_UPLOADED, UPLOAD_REJECTED,
 DOCUMENT_VIEWED, DOCUMENT_DOWNLOADED, DOCUMENT_UPDATED, VERSION_UPLOADED, DOCUMENT_DELETED, DOCUMENT_RESTORED,
 DOCUMENT_PURGED, GRANT_CREATED, GRANT_UPDATED, GRANT_REVOKED, ACCESS_DENIED, ACCESS_SUGGESTED, SUGGESTION_DISMISSED,
-USER_CREATED, USER_UPDATED, USER_DEACTIVATED, USER_REACTIVATED, ROLE_CHANGED, PASSWORD_RESET, SESSIONS_REVOKED,
+USER_CREATED, USER_UPDATED, USER_DEACTIVATED, USER_REACTIVATED, USER_DELETED, ROLE_CHANGED, PASSWORD_RESET, SESSIONS_REVOKED,
 OWNERSHIP_TRANSFERRED, AUDIT_EXPORTED, AUDIT_VERIFIED`
 
 ### Operations

@@ -16,8 +16,8 @@ Commit links are relative (`../../commit/<sha>`) so they resolve on the hosted r
 - [`scripts/authz-mutation-check.py`](scripts/authz-mutation-check.py): not a prompt but a tool, written after
   entry 7. It is how I check whether an AI-written test actually tests anything.
 
-> **A note on dates.** All entries below are from 22 October 2026, the day the work was done. I have not backdated
-> anything. The commit history shows the real order.
+> **A note on dates.** Entries 1-11 are from 22 October 2026; later entries carry their actual dates.
+> Nothing is backdated. The commit history shows the real order.
 
 ---
 
@@ -212,3 +212,251 @@ explicit grant updates including server rejection. The browser's existing audit-
 hidden or "fixed" by modifying historical events.
 
 **Commit:** Pending; these edits have not been committed. No historical commit link is invented.
+
+## 12. 2026-10-23: Admin-only bootstrap and audit-preserving account deletion
+
+**Asked:** Replace the default users, then superseded that request with "add only admin by default; admin will
+add all other users" and requested a visible Delete user option. Also requested all test scenarios in Markdown
+and a reusable full-project implementation prompt.
+
+**Produced:** An admin-only bootstrap, normal dev-only admin sign-in shortcut, an admin DELETE endpoint,
+typed-confirmation dialog, permanent account tombstones, session revocation, ownership-transfer prerequisite,
+integration/component tests, and the accompanying documentation.
+
+**What needed correction:** The first plan renamed six legacy demo accounts. That no longer matched the latest
+request, so its uncommitted migration/config/tests were removed rather than applied to existing data. Hard
+deletion would break document/version/grant references and the continuity of the audit evidence. Deactivation
+alone would be misleading under an irreversible Delete label. An initial UI patch also put the Delete menu
+item in mutation arguments instead of the row menu; interaction tests found the absent control. Type checking
+then rejected an unsupported Testing Library `exact` option.
+
+**Did instead:** Keep only bootstrap admin; all others are created through the existing admin workflow.
+Deletion is explicitly documented as irreversible soft deletion, separate from reversible deactivation.
+Retain historical identities and audit rows; hide deleted accounts from directory/totals/live grants, refuse
+self-deletion, and require transfer of live and trashed documents. Lock user rows to serialize deletion with
+login/new ownership, prevent reactivation through normal APIs and a database constraint, and append success
+and refusal events through AuditService. The new route is covered in AdminBoundaryTest, direct controller
+defence-in-depth checks and mutation index 9. Move the Delete item into the real row menu and remove the
+unsupported test option. The 200-scenario checklist is a definition inventory, not a claim of 200 executed tests.
+
+**Commit:** Pending for this update; no commit was requested and no fix SHA is invented.
+
+---
+
+## Reusable master implementation prompt
+
+Copy the following prompt into a new project. Replace placeholders before use. This is an implementation brief,
+not an assertion that deployment, MFA, antivirus or every listed manual scenario already exists in TrustVault.
+
+```text
+You are building <PROJECT_NAME>, a confidential-document platform for <ORGANIZATION_OR_USE_CASE>.
+Build a complete, working application, not static mockups or a CRUD demo with hidden buttons.
+The wrong person must not reach a document through any route, and the system must prove who reached it
+or was refused. Use only synthetic development data. Do not transmit confidential files to external AI.
+
+PROJECT PARAMETERS
+- Product name: <PROJECT_NAME>
+- Repository: <REPOSITORY>
+- Public hostname/deployment target: <HOST_OR_NOT_YET_SELECTED>
+- Recommended backend: Java 21, Spring Boot 3.5, Spring Security, Spring Data JPA.
+- Recommended database: PostgreSQL with Flyway migrations.
+- Recommended frontend: React, TypeScript, Vite, React Router, TanStack Query, Tailwind.
+- Typography: self-hosted Poppins headings and Outfit body font.
+- If the project already has a different stack, preserve it unless explicitly asked to migrate.
+  Implement equivalent security invariants; explain meaningful tradeoffs before changing architecture.
+
+WORKING METHOD
+1. Inspect existing code, requirements, Markdown files, configuration and dirty worktree before editing.
+2. Preserve unrelated work. Make complete, focused changes; never disable security to make a demo work.
+3. Describe the permission model and API contract before wiring screens to endpoints.
+4. Implement real API/database behavior end-to-end. No fake counts, pretend uploads or success toasts
+   for unimplemented actions. Surface errors through safe, actionable responses and UI feedback.
+5. Test actual role/grant boundaries, including direct HTTP requests without the UI.
+6. Keep THREATS.md, PROMPTS.md, API docs and the setup instructions truthful as work proceeds.
+7. Verify the changed paths and production build. Report incomplete/blocked work plainly.
+8. Do not fabricate commit history, deployment URLs, screenshots, test results or videos.
+9. Do not use agents/workflows or install tools unnecessarily. Use existing tooling and conventions.
+
+NON-NEGOTIABLE SECURITY INVARIANTS
+- A single central DocumentAccessService (or equivalent) makes document authorization decisions.
+  Every single-document route calls require/requireIncludingTrash before reading document information,
+  versions, grants, activity, suggestions or bytes.
+- Permission is per document, granted to named users. No folder/category inheritance or admin bypass.
+- No document permission means 404, indistinguishable from an unknown ID. Use 403 for a caller who
+  can READ but lacks the required higher permission. Unauthenticated requests require authentication.
+  Role-gated admin/upload/directory routes may use 403 for wrong roles.
+- SQL must filter document search, category suggestions and counts by live authorization before paging.
+  Never fetch an unauthorized page and filter it in application code.
+- Check server-side session, active account, role and document grants on every request.
+  No authorization cache, public bearer link, presigned URL or expiring download URL.
+- Revocation takes effect on the next request, including previously copied URLs and old versions.
+  Be honest: already delivered bytes and in-flight transfers cannot be recalled.
+- Owners alone grant/revoke, trash/restore/purge, view document activity and control suggestions.
+- READ includes detail, versions and download. EDIT adds metadata changes and new versions, not ownership.
+- ADMIN manages identities and global audit/operations; it has zero implicit document access and cannot
+  upload. An explicit owner-granted READ/EDIT permission works normally for an admin.
+- Every completed sensitive operation is audited within its transaction. Every refusal is independently
+  audited so rollback cannot erase it. Use only the central AuditService for inserts.
+- Never UPDATE, DELETE or TRUNCATE audit_events through application code. No log "repair" by rewriting.
+
+IDENTITY, AUTHENTICATION AND DEFAULT ACCOUNTS
+- Bootstrap ONLY an administrator on a fresh empty database, behind an explicit seed setting.
+  No default owners, viewers, documents, grants or simulated audit incidents.
+- Backend dev profile may supply a clearly public local admin password. Production requires an explicit
+  secret and must not ship a default password. Never silently reset existing accounts on startup.
+- A development-only frontend shortcut may fill the admin credentials but must call normal sign-in.
+  Exclude the shortcut and public dev password from production bundles.
+- Administrator creates all other users through People & roles > New user, choosing OWNER, VIEWER or ADMIN.
+- New accounts and admin resets use temporary passwords and require password change before other actions.
+- Use salted strong password hashing, generic login errors, account lockout and per-IP throttling.
+  Suggested defaults: BCrypt cost 12, five failures/15-minute lockout, 30 attempts per IP/five minutes.
+- Passwords: 12-128 characters, deny common values, reject username inclusion and trivial repetition.
+- Use opaque server-side sessions; store only token hashes. Cookies: HttpOnly, Secure under TLS,
+  SameSite Strict. Suggested timeouts: 30 minutes idle, eight hours absolute.
+- Every mutation sends X-XSRF-TOKEN matching the CSRF cookie. Apply to login and DELETE as well.
+- Logout removes the session server-side. Password change revokes other sessions; reset/deactivation/
+  account deletion revokes all target sessions.
+- Clear frontend confidential query state on logout, account switch and session-expiry 401.
+- Validate post-login redirects against the same origin; never trust an arbitrary next URL.
+- Admin directory supports search/role filters, create/edit, reset password, revoke sessions,
+  deactivate/reactivate, transfer documents and a visible Delete user action.
+- Deactivate is reversible. Delete is explicitly irreversible account removal with history retention:
+  mark deleted/inactive, hide from directory and live totals, revoke sessions, preserve identity/audit/
+  version/grant references, reserve the username, and disallow later reset/reactivation.
+- Require transfer of all owned documents, including trash, before deleting/demoting an owner.
+  Target must be an active OWNER. Refuse self-deletion, self-deactivation and self-demotion.
+- Use a typed username confirmation and explain soft deletion versus data erasure. Report conflicts
+  visibly without closing the dialog as if deletion succeeded.
+- Serialize account removal with new ownership assignments/login to avoid races. Preserve audit evidence;
+  never cascade-delete documents or audit history when removing a person.
+- Existing installations must retain data on upgrade. Remove obsolete demo accounts only through
+  deliberate admin actions; never reset a database just to alter defaults.
+
+DOCUMENT MANAGEMENT AND STORAGE
+- Upload, organize by category/classification, search, edit metadata, version, download and recover documents.
+- Metadata: name, description, category, classification, owner, timestamps, file type/size/hash,
+  current version, optimistic-lock token, deletion/retention metadata.
+- Suggested bounds: name 200, description 2000, category 50 characters, upload 20 MiB.
+- Supported types: PDF, DOCX, XLSX, PPTX, TXT, CSV, PNG, JPG/JPEG. Add extensions only with content checks.
+- All original uploads and version uploads go through one FileValidator.
+- Check extension/content agreement, nonempty bytes, size, safe filenames and structural validity.
+- Reject PDF active-content names, including hex-escaped names and EmbeddedFile/EmbeddedFiles.
+  Document compressed-object-stream limitations; do not call a regex an antivirus engine.
+- Inspect OOXML required parts and reject macro/ActiveX content; bound ZIP entry processing.
+- Bound image dimensions; reject invalid text encoding, NUL and disallowed HTML/script markup.
+- Encrypt each version with a fresh AES-256-GCM data key; wrap with an external master key.
+  Keep ciphertext separate from metadata. File bytes are reachable only through authorized API handlers.
+- Downloads use attachment disposition, no-store/private policy, nosniff and sandbox CSP.
+- Preserve prior version bytes and uploader attribution. Validate lockVersion to reject stale updates.
+- Search name/owner case-insensitively, exact category, classification and inclusive UTC creation dates.
+  Support All/Owned/Shared/Trash scopes, allowlisted sorting and bounded paging.
+- Merge simultaneous debounced filters without losing one update. URL state and Back/Forward must agree.
+- Trash immediately denies grantees; only owner can inspect recovery context.
+  Restore re-enables only still-valid grants. Purge only from trash, destroys all file versions, keeps audit.
+- Use a documented retention period (for example 30 days) with an audited scheduled purge.
+
+SHARING AND SUGGESTIONS
+- Owners select active named people from a limited searchable directory; VIEWER cannot enumerate users.
+- Grant READ or EDIT, optional future expiry; allow explicit update/downgrade/expiry removal/revocation.
+- Scope every grant/suggestion child ID to its document to prevent cross-document ID substitution.
+- Reject self-grants, inactive/deleted/unknown recipients and invalid expiry.
+- Suggestions are optional, explainable and deterministic over the current owner's sharing history only.
+  Never disclose another owner's private documents or send content to a third party.
+- Generate, accept and dismiss through explicit user actions. Never widen access automatically.
+  Audit suggestions and the human decision, linking accepted suggestions to resulting grants.
+- Exclude already-granted, inactive/deleted and deliberately revoked recipients.
+
+AUDIT AND ADMINISTRATIVE OPERATIONS
+- Audit uploads, views/downloads, edits, versions, trash/restore/purge, grants/revocations, transfers,
+  auth events, user changes/deletions, and refused attempts.
+- Record actor identity/role, target, action, outcome, UTC time, safe details, request ID, IP and user-agent.
+  Never record passwords, raw tokens, plaintext confidential content or cryptographic keys.
+- Append-only DB permissions plus mutation-blocking triggers; runtime app role is not schema owner/DBA.
+- HMAC-chain canonical events with a key external to the database. Serialize appends so the chain cannot fork.
+- Successes commit atomically with business writes. Denials survive rollback through independent logging.
+  Do not start REQUIRES_NEW while an outer transaction holds the audit advisory lock; defer the denial write
+  until completion and explicitly document its residual crash window.
+- Verify chain integrity and identify the first broken sequence. Surface tampering; never hide/reset warnings.
+- Admin dashboard: activity trend, authorized operational counts, recent permission changes, denied attempts,
+  repeated-denial/bulk-download/login-probing/lockout/restricted-sharing/admin-promotion/integrity alerts.
+- Search/filter/paginate global audit; export bounded CSV with formula-injection neutralization.
+- Document key compromise, tail truncation without external anchoring and privileged-admin indirect access.
+
+PREMIUM FRONTEND REQUIREMENTS
+- A calm evergreen sidebar, light neutral canvas, restrained lime accents, clear cards and subtle borders/shadows.
+- Use Poppins/Outfit self-hosted fonts, consistent spacing/radius, useful icons and strong readable hierarchy.
+- Responsive desktop/tablet/mobile layouts, not a desktop table squeezed into a phone viewport.
+- Login, mandatory password change, personal workspace overview, library grid/list, advanced filters,
+  upload dialog, document overview/metadata/version/access/activity panels, sharing/expiry editor, trash/
+  restore/purge, admin dashboard, audit log and People & roles directory.
+- Role-specific landing pages and workspace guide. Never confuse an intentionally empty admin library with
+  missing functionality; explain admin's lack of document access.
+- Counts must come from authorized server totals, not the first result page or invented demo data.
+- Shared grid/table action implementation where practical; mutations use real endpoints and invalidate
+  relevant query caches, counts and audit data.
+- Accessible labels, focus-visible controls, keyboard menus, modal focus trapping/restoration and Escape.
+- Honest loading/empty/error/denied states, safe notifications, required-field feedback, pending-state controls.
+- Destructive confirmations state the actual result and prerequisites; do not hide rejected mutations.
+- No dangerouslySetInnerHTML, sensitive localStorage or client-only authorization.
+- Treat animation as decoration: respect reduced motion and keep essential controls discoverable.
+
+API CONTRACT
+- Document every endpoint, role/effective permission, request body, response, status and error shape.
+- Prefer consistent RFC 7807 errors without SQL, stack traces or internal class names.
+- Typical routes:
+  /api/auth/{csrf,login,logout,me,change-password}
+  /api/documents, /api/documents/categories
+  /api/documents/{id} (GET/PATCH/DELETE)
+  /api/documents/{id}/content
+  /api/documents/{id}/versions and /versions/{versionNo}/content
+  /api/documents/{id}/{restore,purge,activity,grants,suggestions}
+  scoped grant revoke and suggestion dismiss routes
+  /api/users/directory
+  /api/admin/{dashboard,audit,users}
+  /api/admin/audit/{actions,export,verify}
+  /api/admin/users/{id} (PATCH/DELETE)
+  /api/admin/users/{id}/{reset-password,revoke-sessions,transfer-documents}
+- All single-document handlers must be in the authorization-route inventory. Protect admin endpoints both
+  at URL/security-filter and method level, and test each layer independently.
+
+ENGINEERING AND VALIDATION
+- Records/typed DTOs, constructor injection, central errors, service-level transactions, safe parameterized SQL.
+- Assigned UUID entities must use proper new-entity semantics, not accidental merge-on-save.
+- Match schema types exactly; do not use char(n) for fields mapped as varchar.
+- Real PostgreSQL integration tests with restricted production-like app privileges and separate migrations role.
+- Cover owner/viewer/admin isolation across every document route, unknown versus inaccessible IDs,
+  cross-document child IDs, downgrade/revoke/expiry, account deletion, sessions/CSRF, uploads, audit and search.
+- A new endpoint must enter the parameterized route list and authorization-mutation inventory.
+- Remove one authorization check and prove a meaningful assertion fails. A compiler or Docker failure is not
+  evidence of mutation detection. Defense-in-depth tests must bypass other layers deliberately.
+- Audit-tampering tests must commit controlled fixtures before checking via another connection; only in
+  disposable databases. Never run those manipulations against real history.
+- Frontend tests cover landing/deep links/forced password change, combined filters, grant editing, deletion
+  confirmation/success/refusal and safe session transitions.
+- Run appropriate integration tests, frontend tests, lint and production type-check/build.
+  Inspect production assets for dev-only credentials and normal browser flows on desktop/mobile.
+- Use a small, focused regression case for every fixed behavioral bug, not tests that restate constants.
+
+DELIVERABLES
+- Working source, migration/schema and clean-clone setup, configuration examples without real secrets.
+- README: architecture, role model, admin-only bootstrap, how admin creates test users, deployment,
+  backups/keys, limitations and honest readiness status.
+- docs/API.md: endpoint-by-endpoint authorization.
+- THREATS.md: specific attacks, mitigation, evidence and accepted risk with honest rationale.
+- PROMPTS.md: at least five actually dated AI-use entries; prompt, output, precise mistake, correction and
+  real fix-commit link once committed. At least two concern authorization/access/audit.
+  Preserve real history and reused prompts; never manufacture errors or backdate entries.
+- TEST_SCENARIOS.md: uniquely numbered scenarios, exact verified count, fixtures created through admin,
+  steps/expected outcomes, direct API tests, variants, destructive-test safety and result template.
+  Distinguish definitions, automated executions and scenarios actually run.
+- WRITEUP.md: built scope, intentional omissions, permission model, storage/revocation/audit tradeoffs,
+  AI mistakes and unfinished items.
+- Deployment scripts and operational steps; real live URL and demo video only when actually available.
+- Final handoff: meaningful changes, required restart/migration steps and truthful remaining limitations.
+
+ACCEPTANCE BAR
+Demonstrate admin creating O1/O2/V1/V2; owners have isolated documents; grant READ then EDIT; download versions;
+revoke and replay old URLs; trash/restore; transfer an owner's documents then delete their account; inspect
+the immutable record; prove an ungranted admin and unrelated owner/viewer receive uniform 404s.
+A polished screen is not a substitute for these server-enforced boundaries.
+```

@@ -54,6 +54,7 @@ const actionIcons: Record<string, IconType> = {
   USER_CREATED: UserPlus,
   USER_UPDATED: UserCog,
   USER_DEACTIVATED: UserX,
+  USER_DELETED: Trash2,
   USER_REACTIVATED: UserCheck,
   ROLE_CHANGED: UserCog,
   PASSWORD_RESET: KeyRound,

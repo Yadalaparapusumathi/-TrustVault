@@ -76,7 +76,13 @@ public class DocumentService {
         ValidatedFile valid = validateOrAudit(file, null);
         String cleanName = MetadataRules.name(name == null || name.isBlank() ? stripExtension(valid.filename()) : name);
 
-        User owner = users.getReferenceById(caller.id());
+        // Hold the account lock until commit so deletion cannot race a new ownership assignment.
+        User owner = users.lockByIds(List.of(caller.id())).stream()
+                .filter(User::isActive).findFirst().orElseThrow(() -> {
+                    audit.recordIndependently(AuditEntry.of(AuditAction.ACCESS_DENIED).outcome(AuditOutcome.DENIED)
+                            .target("DOCUMENT", null).detail("attempted", "upload").detail("reason", "inactive_owner"));
+                    return ApiException.forbidden("An active document owner is required");
+                });
         Instant now = clock.instant();
         Document document = new Document(cleanName, cleanDescription, cleanCategory,
                 classification == null ? Classification.INTERNAL : classification, owner, now);

@@ -18,18 +18,6 @@ const demoAccounts = import.meta.env.DEV ? [
     password: 'Admin#Vault2026',
     description: 'Dashboard, users and audit log via the sidebar. No document access by default.',
   },
-  {
-    role: 'Owner',
-    usernames: ['alice', 'bob', 'erin'],
-    password: 'Owner#Vault2026',
-    description: 'Document library, uploads, versions, sharing and trash. Start with alice.',
-  },
-  {
-    role: 'Viewer',
-    usernames: ['carol', 'dave', 'frank'],
-    password: 'Viewer#Vault2026',
-    description: 'Shared documents only. Frank also has edit access to the partner integration spec.',
-  },
 ] : [];
 
 export default function LoginPage() {
@@ -156,7 +144,7 @@ export default function LoginPage() {
                 <span className="eyebrow rounded-md bg-lime/50 px-2 py-1 text-brand-800">Dev only</span>
               </div>
               <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                Pick an account, then sign in. Backend <code>dev</code> seeds an empty database with users and sample files.
+                Only admin is created on an empty database. Sign in, then use People &amp; roles → New user to add owners and viewers.
               </p>
               <div className="mt-3 divide-y divide-slate-100">
                 {demoAccounts.map((account) => (
@@ -189,7 +177,7 @@ export default function LoginPage() {
               </div>
               <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
                 Existing users are never reset. If passwords were overridden, use your configured password.
-                Admin opens the dashboard; owners and viewers open their workspace.
+                No sample documents or other accounts are created automatically.
               </p>
             </section>
           )}

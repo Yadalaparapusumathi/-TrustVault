@@ -2,6 +2,7 @@ package com.trustvault.admin;
 
 import com.trustvault.audit.AuditAction;
 import com.trustvault.audit.AuditEntry;
+import com.trustvault.audit.AuditOutcome;
 import com.trustvault.audit.AuditService;
 import com.trustvault.auth.PasswordPolicy;
 import com.trustvault.auth.SessionService;
@@ -77,7 +78,7 @@ public class AdminUserService {
                 rs -> {
                     live.put(rs.getObject("user_id", UUID.class), rs.getLong("n"));
                 }, Timestamp.from(now), Timestamp.from(now.minus(properties.security().sessionIdleTimeout())));
-        return users.findAllByOrderByDisplayNameAsc().stream()
+        return users.findByDeletedAtIsNullOrderByDisplayNameAsc().stream()
                 .map(u -> view(u, owned.getOrDefault(u.getId(), 0L), live.getOrDefault(u.getId(), 0L)))
                 .toList();
     }
@@ -166,6 +167,29 @@ public class AdminUserService {
                 .detail("username", user.getUsername()).detail("sessionsRevoked", revoked));
     }
 
+    @Transactional
+    public void delete(AuthenticatedUser admin, UUID id) {
+        User user;
+        try {
+            user = load(id);
+            if (id.equals(admin.id())) {
+                throw ApiException.badRequest("You cannot delete your own account");
+            }
+            if (documents.countByOwnerId(id) > 0) {
+                throw ApiException.conflict("This user still owns documents, including trash. Transfer them to another owner first.");
+            }
+        } catch (ApiException e) {
+            audit.recordIndependently(AuditEntry.of(AuditAction.USER_DELETED).outcome(AuditOutcome.DENIED)
+                    .target("USER", id).detail("reason", e.getMessage()));
+            throw e;
+        }
+        user.delete(clock.instant());
+        int revoked = sessions.revokeAll(id);
+        audit.record(AuditEntry.of(AuditAction.USER_DELETED).target("USER", id)
+                .detail("username", user.getUsername()).detail("sessionsRevoked", revoked)
+                .detail("reason", "account-removed-history-retained"));
+    }
+
     /**
      * Hands a leaver's documents to another owner. Any grant the new owner previously held on those documents is
      * retired (ownership supersedes it) and pending suggestions are dropped. One audit row per document so each
@@ -176,6 +200,8 @@ public class AdminUserService {
         if (fromId.equals(toId)) {
             throw ApiException.badRequest("Source and target are the same user");
         }
+        // Serialize deletion and ownership changes in a stable order, including both transfer participants.
+        users.lockByIds(List.of(fromId, toId));
         User from = load(fromId);
         User to = users.findById(toId)
                 .filter(u -> u.isActive() && u.getRole() == Role.OWNER)
@@ -196,7 +222,8 @@ public class AdminUserService {
     }
 
     private User load(UUID id) {
-        return users.findById(id).orElseThrow(() -> ApiException.notFound("User not found"));
+        return users.lockByIds(List.of(id)).stream().filter(u -> !u.isDeleted()).findFirst()
+                .orElseThrow(() -> ApiException.notFound("User not found"));
     }
 
     private static String blankToNull(String s) {

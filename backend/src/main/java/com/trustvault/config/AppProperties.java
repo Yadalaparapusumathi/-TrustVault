@@ -39,6 +39,6 @@ public record AppProperties(
     public record Retention(@Min(1) int trashDays, @NotBlank String purgeCron) {
     }
 
-    public record Seed(boolean enabled, String passwordAdmin, String passwordOwner, String passwordViewer) {
+    public record Seed(boolean enabled, String passwordAdmin) {
     }
 }

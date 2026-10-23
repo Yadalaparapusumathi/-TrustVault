@@ -28,6 +28,7 @@ public interface DocumentGrantRepository extends JpaRepository<DocumentGrant, UU
     @Query("""
             select g from DocumentGrant g join fetch g.grantee join fetch g.grantedBy
             where g.document.id = :documentId and g.revokedAt is null and (g.expiresAt is null or g.expiresAt > :now)
+              and g.grantee.deletedAt is null
             order by g.createdAt
             """)
     List<DocumentGrant> findActiveForDocument(@Param("documentId") UUID documentId, @Param("now") Instant now);
@@ -51,6 +52,6 @@ public interface DocumentGrantRepository extends JpaRepository<DocumentGrant, UU
     @Query("select distinct g.grantee.id from DocumentGrant g where g.document.id = :documentId and g.revokedAt is not null")
     List<UUID> findPreviouslyRevokedGrantees(@Param("documentId") UUID documentId);
 
-    @Query("select count(g) from DocumentGrant g where g.revokedAt is null and (g.expiresAt is null or g.expiresAt > :now)")
+    @Query("select count(g) from DocumentGrant g where g.grantee.deletedAt is null and g.revokedAt is null and (g.expiresAt is null or g.expiresAt > :now)")
     long countActive(@Param("now") Instant now);
 }

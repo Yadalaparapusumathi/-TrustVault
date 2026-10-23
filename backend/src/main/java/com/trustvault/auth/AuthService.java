@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -54,7 +55,7 @@ public class AuthService {
     @Transactional
     public LoginResult login(String username, String password, String ip, String userAgent) {
         Instant now = clock.instant();
-        Optional<User> found = users.findByUsernameIgnoreCase(username.trim());
+        Optional<User> found = users.lockByUsername(username.trim());
         if (found.isEmpty()) {
             encoder.matches(password, dummyHash);
             audit.record(AuditEntry.of(AuditAction.LOGIN_FAILED).systemActor().outcome(AuditOutcome.FAILURE)
@@ -98,7 +99,12 @@ public class AuthService {
 
     @Transactional
     public void changePassword(AuthenticatedUser caller, String currentPassword, String newPassword) {
-        User user = users.findById(caller.id()).orElseThrow(() -> ApiException.unauthorized("Authentication required"));
+        User user = users.lockByIds(List.of(caller.id())).stream().filter(User::isActive).findFirst()
+                .orElseThrow(() -> {
+                    audit.recordIndependently(AuditEntry.of(AuditAction.PASSWORD_CHANGED).outcome(AuditOutcome.DENIED)
+                            .target("USER", caller.id()).detail("reason", "inactive_account"));
+                    return ApiException.unauthorized("Authentication required");
+                });
         if (!encoder.matches(currentPassword, user.getPasswordHash())) {
             audit.recordIndependently(AuditEntry.of(AuditAction.PASSWORD_CHANGED).outcome(AuditOutcome.FAILURE)
                     .target("USER", user.getId()).detail("reason", "wrong_current_password"));

@@ -29,7 +29,8 @@ API on PostgreSQL with a React single-page app.
     `UPDATE`, `DELETE` and `TRUNCATE` even for the table owner;
   - an integrity check finds the exact sequence number where the chain breaks.
 - **Admin:**
-  - user management: create, change role, deactivate, reset password, kill sessions;
+  - admin-only bootstrap; other accounts created by an administrator with mandatory first-login password change;
+  - user management: create, change role, deactivate/reactivate, audit-preserving account deletion, reset password, kill sessions;
   - a dashboard with alerts: repeated denials, bulk downloads, username probing, account lockouts, restricted
     documents shared, someone made admin, audit tampering;
   - a filterable audit log with CSV export (cells are protected against formula injection);
@@ -38,8 +39,8 @@ API on PostgreSQL with a React single-page app.
   never grants anything. The owner confirms, and the suggestion, the acceptance or dismissal, and the resulting
   grant are each audited and linked.
 - **Tests:**
-  - 139 backend tests against real PostgreSQL;
-  - a mutation script that removes 9 individual authorisation checks and confirms that the suite fails each time;
+  - backend integration tests against real PostgreSQL, including user deletion and bootstrap coverage;
+  - a mutation script covering 10 individual authorisation checks (counts and evidence in THREATS.md);
   - frontend unit/component tests, including role landing, grid/list actions, combined search filters and grant editing.
 
 The workspace was redesigned with self-hosted Poppins and Outfit typography, an evergreen sidebar, an overview
@@ -47,6 +48,13 @@ for owners/viewers, visible shared-file and recovery navigation, and grid/list d
 lands on system activity instead of an intentionally empty document library. A role-specific workspace guide
 explains where each operation lives. Existing grants now have an explicit edit action for permission and expiry.
 The redesign does not add any backend endpoint, public link, document preview or authorisation bypass.
+
+The subsequent account-management update adds `DELETE /api/admin/users/{id}`. It retains historical user rows
+and immutable audit events, rejects self-deletion and requires ownership transfer (including trash).
+Deletion cannot be reversed; deactivation remains available for temporary suspension. Removed accounts cannot
+sign in, appear in the directory, be reset/reactivated, or have their usernames reused. New installations contain
+only the admin account; existing installations are never wiped automatically. See [TEST_SCENARIOS.md](TEST_SCENARIOS.md)
+for the manual checklist and [PROMPTS.md](PROMPTS.md#reusable-master-implementation-prompt) for the reusable brief.
 
 ## Permission model, in my own words
 

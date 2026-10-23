@@ -36,18 +36,12 @@ afterEach(() => vi.unstubAllEnvs());
 describe('local test accounts', () => {
   it.each([
     ['admin', 'Admin#Vault2026'],
-    ['alice', 'Owner#Vault2026'],
-    ['bob', 'Owner#Vault2026'],
-    ['erin', 'Owner#Vault2026'],
-    ['carol', 'Viewer#Vault2026'],
-    ['dave', 'Viewer#Vault2026'],
-    ['frank', 'Viewer#Vault2026'],
   ])('fills %s credentials without bypassing sign-in', async (username, password) => {
     const login = vi.fn<AuthContextValue['login']>().mockResolvedValue({
       id: 'test-user',
       username,
       displayName: 'Test user',
-      role: username === 'admin' ? 'ADMIN' : ['alice', 'bob', 'erin'].includes(username) ? 'OWNER' : 'VIEWER',
+      role: 'ADMIN',
       email: null,
       mustChangePassword: false,
     });
@@ -60,7 +54,16 @@ describe('local test accounts', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     expect(login).toHaveBeenCalledExactlyOnceWith({ username, password });
-    expect(await screen.findByRole('heading', { name: username === 'admin' ? 'Admin overview' : 'Workspace overview' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Admin overview' })).toBeInTheDocument();
+  });
+
+  it('offers only the bootstrap admin and explains how to create other accounts', () => {
+    renderLogin();
+    expect(screen.getByRole('button', { name: 'admin' })).toBeInTheDocument();
+    expect(screen.getByText(/Only admin is created/)).toHaveTextContent('New user');
+    for (const name of ['alice', 'bob', 'erin', 'carol', 'dave', 'frank', 'sumathi', 'asha', 'mounika', 'blessy', 'prasanna', 'nandini']) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+    }
   });
 
   it('keeps failed demo logins on the sign-in page and allows correcting the password', async () => {
@@ -68,7 +71,7 @@ describe('local test accounts', () => {
       new ApiError(401, { detail: 'Invalid credentials' }),
     );
     renderLogin(login);
-    fireEvent.click(screen.getByRole('button', { name: 'alice' }));
+    fireEvent.click(screen.getByRole('button', { name: 'admin' }));
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Invalid username or password.');
@@ -77,7 +80,7 @@ describe('local test accounts', () => {
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'locally-overridden-password' } });
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     await waitFor(() => expect(login).toHaveBeenLastCalledWith({
-      username: 'alice',
+      username: 'admin',
       password: 'locally-overridden-password',
     }));
   });

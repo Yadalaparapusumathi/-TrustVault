@@ -27,6 +27,7 @@ export const adminApi = {
   users: (signal?: AbortSignal) => api.get<AdminUser[]>('/admin/users', { signal }),
   createUser: (body: CreateUserRequest) => api.post<AdminUser>('/admin/users', body),
   updateUser: (id: string, body: UpdateUserRequest) => api.patch<AdminUser>(user(id), body),
+  deleteUser: (id: string) => api.delete<void>(user(id)),
   resetPassword: (id: string, body: ResetPasswordRequest) => api.post<void>(`${user(id)}/reset-password`, body),
   revokeSessions: (id: string) => api.post<void>(`${user(id)}/revoke-sessions`),
   transferDocuments: (id: string, body: TransferDocumentsRequest) =>

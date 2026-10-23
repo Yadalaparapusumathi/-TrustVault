@@ -40,8 +40,6 @@ services:
       TV_COOKIE_SECURE: ${TV_COOKIE_SECURE:-true}
       TV_SEED_ENABLED: ${TV_SEED_ENABLED:-false}
       TV_SEED_PASSWORD_ADMIN: ${TV_SEED_PASSWORD_ADMIN:-}
-      TV_SEED_PASSWORD_OWNER: ${TV_SEED_PASSWORD_OWNER:-}
-      TV_SEED_PASSWORD_VIEWER: ${TV_SEED_PASSWORD_VIEWER:-}
     read_only: true
     tmpfs:
       - /tmp

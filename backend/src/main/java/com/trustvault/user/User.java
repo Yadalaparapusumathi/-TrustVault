@@ -7,12 +7,14 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "users")
+@DynamicUpdate
 public class User extends AssignedIdEntity {
 
     @Id
@@ -36,6 +38,9 @@ public class User extends AssignedIdEntity {
 
     @Column(nullable = false)
     private boolean active = true;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
 
     @Column(name = "must_change_password", nullable = false)
     private boolean mustChangePassword;
@@ -142,6 +147,16 @@ public class User extends AssignedIdEntity {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    public void delete(Instant now) {
+        active = false;
+        deletedAt = now;
+        updatedAt = now;
     }
 
     public boolean isMustChangePassword() {

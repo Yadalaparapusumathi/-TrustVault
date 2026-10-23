@@ -86,6 +86,19 @@ export function useResetPassword() {
   });
 }
 
+export function useDeleteUser() {
+  const qc = useQueryClient();
+  const invalidate = useUsersInvalidation();
+  return useMutation({
+    mutationFn: (user: AdminUser) => adminApi.deleteUser(user.id),
+    onSuccess: (_data, user) => {
+      qc.setQueryData<AdminUser[]>(queryKeys.admin.users, (prev) => prev?.filter((u) => u.id !== user.id));
+      invalidate();
+      toast.success(`@${user.username} deleted. Audit history retained.`);
+    },
+  });
+}
+
 export function useRevokeSessions() {
   const invalidate = useUsersInvalidation();
   return useMutation({

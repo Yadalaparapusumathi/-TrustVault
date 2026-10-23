@@ -63,7 +63,7 @@ public class DashboardService {
         Timestamp dayAgo = Timestamp.from(now.minus(Duration.ofHours(24)));
         IntegrityReport report = integrity.recent();
 
-        AdminDtos.Totals totals = new AdminDtos.Totals(users.count(), users.countByActiveTrue(),
+        AdminDtos.Totals totals = new AdminDtos.Totals(users.countByDeletedAtIsNull(), users.countByActiveTrue(),
                 documents.countByDeletedAtIsNull(), documents.countByDeletedAtIsNotNull(), grants.countActive(now),
                 count("SELECT count(*) FROM audit_events WHERE occurred_at > ?", dayAgo),
                 count("SELECT count(*) FROM audit_events WHERE occurred_at > ? AND outcome = 'DENIED'", dayAgo),

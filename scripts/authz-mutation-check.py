@@ -36,6 +36,8 @@ M=[
   "if (expired || !user.isActive()) {", "if (expired) {"),
  ("directory role rule removed", B+'config/SecurityConfig.java',
   '.requestMatchers("/api/users/directory").hasAnyRole("OWNER", "ADMIN")', '.requestMatchers("/api/users/directory").authenticated()'),
+ ("delete user method-level role check removed", B+'admin/AdminController.java',
+  'userService.delete(CurrentUser.requireRole(Role.ADMIN), id);', 'userService.delete(CurrentUser.require(), id);'),
 ]
 only = sys.argv[1:] 
 for i,(name,f,old,new) in enumerate(M):

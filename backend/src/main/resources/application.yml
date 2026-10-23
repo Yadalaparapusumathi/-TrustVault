@@ -87,5 +87,3 @@ trustvault:
   seed:
     enabled: ${TV_SEED_ENABLED:false}
     password-admin: ${TV_SEED_PASSWORD_ADMIN:}
-    password-owner: ${TV_SEED_PASSWORD_OWNER:}
-    password-viewer: ${TV_SEED_PASSWORD_VIEWER:}

@@ -22,8 +22,10 @@ triggers and role split.
 
 ### Mutation check (what the judges will do)
 
-`python3 scripts/authz-mutation-check.py` removes one authorisation check at a time and re-runs the suite. Every
-mutation is currently **KILLED** (the suite fails):
+`python3 scripts/authz-mutation-check.py` removes one authorisation check at a time and re-runs the suite.
+Rows 0-8 record the original mutation run. Mutation 9 was added with account deletion and separately verified
+in an isolated source copy: two assertion failures in the direct-controller test, zero infrastructure errors.
+These are mutation results, not the count of normal passing tests.
 
 | # | Check removed | Tests that fail |
 |---|---|---|
@@ -36,6 +38,7 @@ mutation is currently **KILLED** (the suite fails):
 | 6 | method-level `requireRole(ADMIN)` in `AdminController` | 2 |
 | 7 | per-request `user.isActive()` in `SessionService` | 1 |
 | 8 | URL rule on `/api/users/directory` | 1 |
+| 9 | Delete user's method-level `requireRole(ADMIN)` | 2 |
 
 Mutation 7 **survived** on the first run. Deactivation also deletes sessions, so no test reached the per-request
 check on its own. I added `RevocationTest.inactiveUserIsCheckedPerRequest`. Admin routes had the same problem: a
@@ -76,11 +79,13 @@ URL rule and a method check guard each one, so deleting either single layer left
 | B-05 | **Username enumeration** via different messages or timing. | Identical 401 message for unknown user, bad password, locked and inactive. Unknown users are checked against a dummy BCrypt hash so timing matches. | ✅ `noUsernameOracle` (message); 🟡 timing not measured by a test |
 | B-06 | **Session fixation.** | A new random session is created at login and any session presented at login is deleted. | ✅ by design |
 | B-07 | **Long-lived sessions after someone leaves.** | Idle timeout 30 min, absolute 8 h. Every request checks the user is still active. Admin "revoke sessions", password reset and deactivation delete all sessions. | ✅ `deactivationKillsSessions`, `inactiveUserIsCheckedPerRequest`, `adminCanKillSessions`, `logoutIsServerSide` |
-| B-08 | **Weak or default passwords.** | 12–128 characters, deny-list of common passwords, may not contain the username. Admin-created and reset accounts must change their password, and they can call nothing else until they do (`PasswordChangeEnforcementFilter`). Seed passwords come from env, not from code. | ✅ `passwordPolicy`, `forcedPasswordChange`, `createdUserMustChangePassword` |
+| B-08 | **Weak or default passwords.** | 12–128 characters, deny-list of common passwords, may not contain the username. Admin-created and reset accounts must change their password before other actions. Only admin is bootstrapped; production requires an explicit seed password. The dev profile has a public local fallback: never enable it in production, and rotate the bootstrap password after setup. | ✅ `passwordPolicy`, `forcedPasswordChange`, `createdUserMustChangePassword`, `seed/DataSeederTest`; production configuration remains an operator responsibility |
 | B-09 | **Password change doesn't kick an attacker who already has a session.** | Changing a password revokes all *other* sessions. | ✅ by design (`AuthService.changePassword`) |
 | B-10 | **Forged or garbage session cookie.** | Looked up by hash → absent → 401. | ✅ `unauthenticated` |
-| B-11 | **Admin locks themselves out or self-escalates and erases tracks.** | Admins cannot change their own role or deactivate themselves. All admin actions are audited. | ✅ `adminCannotLockThemselvesOut` |
+| B-11 | **Admin locks themselves out or self-escalates and erases tracks.** | Admins cannot change their own role, deactivate or delete themselves. User-deletion success and business refusals are audited. | ✅ `adminCannotLockThemselvesOut`, `UserDeletionTest.selfDeletionAndUnknownIdsAreAuditedAndCsrfIsRequired` |
 | B-12 | **No MFA.** | ⚠️ **Accepted.** A stolen password is enough for one account. I would add TOTP/WebAuthn next, for admins first. This is the biggest gap in the authentication design. | ⚠️ |
+| B-13 | **Deleting a user erases evidence, strands documents or permits account resurrection.** | Irreversible soft deletion retains historical identity/version/grant/audit references, blocks login and revokes sessions. Transfer live and trashed documents first. Deleted accounts are excluded from directory/totals/live grants, cannot be reset/reactivated, and usernames remain reserved. A DB constraint prevents active deleted rows. Deactivation remains a separate reversible action; deletion is not personal-data erasure. | ✅ `UserDeletionTest.deletionRevokesAccessButPreservesHistoryAndCannotBeUndone`, `ownedDocumentsIncludingTrashMustBeTransferredBeforeDeletion` |
+| B-14 | **Account removal races a login or new document ownership.** | User-row locks serialize deletion with login, upload and ownership transfer; multi-user transfer locks in UUID order. Upload rechecks active state after acquiring the lock; ORM updates only changed user fields. | 🟡 `UserDeletionTest.aResolvedIdentityCannotUploadAfterDeletionCommits` covers a stale caller; exhaustive concurrent-load testing is not claimed |
 
 ## C. Revocation ("taking access away works immediately")
 
