@@ -10,3 +10,5 @@ export function pageWindow(page: number, totalPages: number): (number | null)[] 
   result.push(totalPages - 1);
   return result;
 }
+
+export const DEFAULT_PAGE_SIZES = [10, 20, 50, 100] as const;

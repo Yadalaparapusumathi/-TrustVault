@@ -22,6 +22,8 @@ import { AuditEventDrawer } from './AuditEventDrawer';
 import { useAuditActions, useAuditEvents } from './hooks';
 
 const SIZE = 50;
+/** Backend caps audit pages at 200. */
+const SIZES = [25, 50, 100, 200] as const;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 type FilterKey = 'actor' | 'action' | 'outcome' | 'documentId' | 'from' | 'to';
 const FILTER_KEYS: FilterKey[] = ['actor', 'action', 'outcome', 'documentId', 'from', 'to'];
@@ -37,6 +39,7 @@ export function AuditLog() {
     const from = params.get('from') ?? '';
     const to = params.get('to') ?? '';
     const page = Number.parseInt(params.get('page') ?? '0', 10);
+    const size = Number.parseInt(params.get('size') ?? '', 10);
     return {
       actor: params.get('actor') ?? '',
       action: params.get('action') ?? '',
@@ -45,6 +48,7 @@ export function AuditLog() {
       from: DATE_RE.test(from) ? from : '',
       to: DATE_RE.test(to) ? to : '',
       page: Number.isFinite(page) && page >= 0 ? page : 0,
+      size: (SIZES as readonly number[]).includes(size) ? size : SIZE,
     };
   }, [params]);
 
@@ -56,15 +60,15 @@ export function AuditLog() {
     from: filters.from || undefined,
     to: filters.to || undefined,
   };
-  const events = useAuditEvents({ ...query, page: filters.page, size: SIZE });
+  const events = useAuditEvents({ ...query, page: filters.page, size: filters.size });
   const hasFilters = FILTER_KEYS.some((k) => filters[k] !== '');
 
-  const update = (changes: Partial<Record<FilterKey | 'page', string | number>>) =>
+  const update = (changes: Partial<Record<FilterKey | 'page' | 'size', string | number>>) =>
     setParams(
       (prev) => {
         const next = new URLSearchParams(prev);
         for (const [k, v] of Object.entries(changes)) {
-          if (v === '' || v === undefined || (k === 'page' && v === 0)) next.delete(k);
+          if (v === '' || v === undefined || (k === 'page' && v === 0) || (k === 'size' && v === SIZE)) next.delete(k);
           else next.set(k, String(v));
         }
         if (!('page' in changes)) next.delete('page');
@@ -227,10 +231,13 @@ export function AuditLog() {
               <div className="border-t border-slate-100">
                 <Pagination
                   page={events.data.page}
-                  size={events.data.size || SIZE}
+                  size={events.data.size || filters.size}
                   totalPages={events.data.totalPages}
                   totalElements={events.data.totalElements}
                   onPageChange={(p) => update({ page: p })}
+                  onSizeChange={(s) => update({ size: s })}
+                  sizeOptions={SIZES}
+                  itemLabel="events"
                 />
               </div>
             )}

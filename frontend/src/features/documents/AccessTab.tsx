@@ -12,8 +12,10 @@ import { Dialog } from '@/components/ui/Dialog';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Field, Input, Select } from '@/components/ui/Input';
+import { Pagination } from '@/components/ui/Pagination';
 import { RelativeTime } from '@/components/ui/RelativeTime';
 import { SkeletonRows } from '@/components/ui/Skeleton';
+import { usePagination } from '@/components/ui/usePagination';
 import { formatDateTime, localDateTimeToIso } from '@/lib/format';
 import { notifyError } from '@/lib/notify';
 import { AccessAssistant } from './AccessAssistant';
@@ -26,6 +28,7 @@ export function AccessTab({ doc }: { doc: DocumentDetail }) {
   const [revokeTarget, setRevokeTarget] = useState<Grant | null>(null);
   const [editTarget, setEditTarget] = useState<Grant | null>(null);
   const grantedIds = (grants.data ?? []).map((g) => g.grantee.id);
+  const { pageItems, pagination } = usePagination(grants.data ?? [], { initialSize: 10, resetKey: doc.id });
 
   return (
     <div className="grid gap-6 xl:grid-cols-5">
@@ -47,8 +50,9 @@ export function AccessTab({ doc }: { doc: DocumentDetail }) {
               description="This document has not been shared with anyone. Use the form to grant access."
             />
           ) : (
+            <>
             <ul className="divide-y divide-slate-100">
-              {grants.data.map((g) => (
+              {pageItems.map((g) => (
                 <li key={g.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <Avatar name={g.grantee.displayName} seed={g.grantee.id} />
@@ -85,6 +89,10 @@ export function AccessTab({ doc }: { doc: DocumentDetail }) {
                 </li>
               ))}
             </ul>
+            <div className="border-t border-slate-100">
+              <Pagination {...pagination} sizeOptions={[10, 20, 50]} itemLabel="people" />
+            </div>
+            </>
           )}
         </Card>
 

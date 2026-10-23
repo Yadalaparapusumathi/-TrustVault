@@ -7,7 +7,7 @@ export function WorkspaceGuide({ open, onClose }: { open: boolean; onClose: () =
   const me = useMe();
   const steps = me.role === 'ADMIN'
     ? [
-        { icon: Users, title: 'Manage people, not their files', text: 'Only admin is created by default. Add all other accounts here. Use a person\'s Actions menu to deactivate or delete their account; transfer owned documents first. Deletion retains audit history.', to: '/admin/users', label: 'People & roles' },
+        { icon: Users, title: 'Manage people, not their files', text: 'Only admin is created by default. Add all other accounts here. Use a person\'s three-dot Actions menu to edit, deactivate or delete their account. Transfer owned documents before deletion. Audit history is retained.', to: '/admin/users', label: 'People & roles' },
         { icon: History, title: 'Follow the evidence', text: 'Filter the audit trail by person, action, result, document or date. Open an event for its request details, or export the filtered CSV.', to: '/admin/audit', label: 'Audit trail' },
         { icon: Fingerprint, title: 'Inspect activity and integrity', text: 'Review denied attempts and permission changes. Re-verify the HMAC chain from the overview. Admin status never grants document access.', to: '/admin', label: 'Security overview' },
       ]

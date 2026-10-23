@@ -13,11 +13,12 @@ import { cn } from '@/lib/cn';
 import { humanizeEnum } from '@/lib/format';
 import { useActivity } from './hooks';
 
-const SIZE = 20;
+const SIZES = [10, 20, 50] as const;
 
 export function ActivityTab({ doc }: { doc: DocumentDetail }) {
   const [page, setPage] = useState(0);
-  const activity = useActivity(doc.id, page, SIZE);
+  const [size, setSize] = useState(20);
+  const activity = useActivity(doc.id, page, size);
 
   return (
     <Card className="overflow-hidden">
@@ -38,10 +39,16 @@ export function ActivityTab({ doc }: { doc: DocumentDetail }) {
           <div className="border-t border-slate-100">
             <Pagination
               page={activity.data.page}
-              size={activity.data.size || SIZE}
+              size={activity.data.size || size}
               totalPages={activity.data.totalPages}
               totalElements={activity.data.totalElements}
               onPageChange={setPage}
+              onSizeChange={(s) => {
+                setSize(s);
+                setPage(0);
+              }}
+              sizeOptions={SIZES}
+              itemLabel="events"
             />
           </div>
         </>

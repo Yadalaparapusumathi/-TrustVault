@@ -19,7 +19,17 @@ export function AdminDashboard() {
 
   return (
     <>
-      <PageHeader eyebrow="Administration / Overview" title="The bigger picture." description={`Welcome back, ${me.displayName.split(' ')[0]}. Here is what is happening across TrustVault.`} actions={<Link to="/admin/audit" className="route-link">Explore audit trail <ArrowUpRight className="h-4 w-4" /></Link>} />
+      <PageHeader
+        eyebrow="Administration / Overview"
+        title="The bigger picture."
+        description={`Welcome back, ${me.displayName.split(' ')[0]}. Here is what is happening across TrustVault.`}
+        actions={
+          <>
+            <Link to="/admin/users" className="route-link"><Users className="h-4 w-4" /> Manage users</Link>
+            <Link to="/admin/audit" className="route-link">Explore audit trail <ArrowUpRight className="h-4 w-4" /></Link>
+          </>
+        }
+      />
       {dashboard.isPending ? (
         <DashboardSkeleton />
       ) : dashboard.isError ? (

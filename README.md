@@ -63,7 +63,9 @@ Sign in as admin, open **People & roles**, and select **New user**. Choose OWNER
 password. Each new user must change it at first sign-in. An owner can then upload documents and grant named
 viewers READ or EDIT access. Admin's empty document library is intentional, not a missing feature.
 
-To delete an account, open its **Actions (...) → Delete user**, read the warning, type the username and confirm.
+To delete an account, open **Manage users** from the admin overview (or **People & roles** in the sidebar,
+at `/admin/users`). Open the person's **Actions (...) → Delete user**, read the warning, type the username
+and confirm.
 **Transfer documents** to another active owner first if the account owns anything, including trash.
 Deletion permanently blocks sign-in, revokes sessions and removes the account from the directory. The database
 retains the historical user identity, version/grant references and immutable audit trail; this is an
@@ -147,6 +149,7 @@ The question-mark button opens a guide tailored to the signed-in role.
 | Authentication and three roles | Sign-in page; role shown in the workspace; password changes in the account menu |
 | Upload, organise and manage | Owners: **My documents → Upload document**; category/classification fields; grid or list view |
 | Search by name, owner, category and date | **All documents** filters, with sorting and pagination; filtering remains server-side |
+| Pagination | One reusable `Pagination` control (page numbers + rows per page) on documents, audit, activity, people, versions, access and alerts; server-paged lists keep page/size in the URL |
 | Read/edit grants to named people | Open an owned document → **Access → Invite someone in** |
 | Change or revoke access | **Access → Edit / Revoke** on an existing grant; optional expiry |
 | Versions and downloads | Open a document → **Versions** or **Download**; EDIT grants allow a new version |

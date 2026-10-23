@@ -243,6 +243,25 @@ unsupported test option. The 200-scenario checklist is a definition inventory, n
 
 ---
 
+## 13. 2026-10-23: Make user deletion discoverable and check the running application
+
+**Asked:** "I don't see delete user option in Admin page."
+
+**Found:** Delete existed only inside each person's three-dot menu. Both local frontend listeners served that
+code, but the backend still ran an older IntelliJ-launched build: an authenticated OPTIONS request to the user
+route advertised PATCH and OPTIONS, not DELETE. A source change alone does not update a running JVM.
+
+**Changed:** Add a visible Delete button in a sticky Actions column, keep the existing confirmation and
+self-deletion protection, and add Manage users to the admin overview. Tests now open deletion without a menu
+and ensure the overview link remains available even when dashboard data fails. Restart the backend with its
+actual application arguments and environment preserved in memory, removing only the IntelliJ launcher agent;
+no database/encryption settings were guessed or credentials written to files. The updated live endpoint now
+advertises DELETE. A temporary synthetic viewer was created, signed in, required to change its password and
+deleted; its session and subsequent login were refused, its deletion was audited, and the pre-existing directory
+was unchanged. The temporary account was removed through the normal audited deletion flow.
+
+**Commit:** Pending for this follow-up; no commit requested.
+
 ## Reusable master implementation prompt
 
 Copy the following prompt into a new project. Replace placeholders before use. This is an implementation brief,

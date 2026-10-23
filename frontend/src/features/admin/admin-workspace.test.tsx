@@ -5,6 +5,7 @@ import { ApiError } from '@/api/errors';
 import { toast } from 'sonner';
 import type { AdminUser } from '@/api/types';
 import { renderWithSession, testUser } from '@/test/renderWithSession';
+import { AdminDashboard } from './AdminDashboard';
 import { AuditLog } from './AuditLog';
 import { UsersAdmin } from './UsersAdmin';
 
@@ -17,11 +18,12 @@ describe('administration workspace', () => {
     ownedDocuments: 0, activeSessions: 2,
   };
 
-  it('requires confirmation before deleting and removes the account after success', async () => {
+  it('offers Delete only inside the Actions menu and requires confirmation before removing the account', async () => {
     const users = vi.spyOn(adminApi, 'users').mockResolvedValue([viewer]);
     const remove = vi.spyOn(adminApi, 'deleteUser').mockImplementation(async () => { users.mockResolvedValue([]); });
     renderWithSession(<UsersAdmin />, { me: { ...testUser, role: 'ADMIN' } });
     fireEvent.click(await screen.findByRole('button', { name: 'Actions for reader' }));
+    expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('menuitem', { name: 'Delete user' }));
     expect(screen.getByText(/Unlike deactivation, this cannot be undone/)).toBeInTheDocument();
     expect(remove).not.toHaveBeenCalled();
@@ -51,6 +53,39 @@ describe('administration workspace', () => {
     renderWithSession(<UsersAdmin />, { me: { ...testUser, role: 'ADMIN' } });
     fireEvent.click(await screen.findByRole('button', { name: 'Actions for reader' }));
     expect(screen.getByRole('menuitem', { name: 'Delete user' })).toBeDisabled();
+  });
+
+  it('pages the people directory and returns to the first page when filtering', async () => {
+    const many: AdminUser[] = Array.from({ length: 12 }, (_, i) => ({
+      ...viewer, id: `u${i}`, username: `user${String(i).padStart(2, '0')}`, displayName: `Person ${String(i).padStart(2, '0')}`,
+    }));
+    vi.spyOn(adminApi, 'users').mockResolvedValue(many);
+    renderWithSession(<UsersAdmin />, { me: { ...testUser, role: 'ADMIN' } });
+    await screen.findByText('Person 00');
+    expect(screen.queryByText('Person 10')).not.toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Pagination' })).toHaveTextContent('Showing 1–10 of 12 accounts');
+    fireEvent.click(screen.getByRole('button', { name: 'Page 2' }));
+    expect(screen.getByText('Person 10')).toBeInTheDocument();
+    expect(screen.queryByText('Person 00')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Filter users'), { target: { value: 'Person 0' } });
+    expect(screen.getByRole('button', { name: 'Page 1' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByText('Person 00')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Rows per page'), { target: { value: '20' } });
+    expect(screen.queryByRole('button', { name: 'Page 2' })).not.toBeInTheDocument();
+  });
+
+  it('sends the chosen audit page size to the server and resets to the first page', async () => {
+    vi.spyOn(adminApi, 'auditActions').mockResolvedValue([]);
+    const audit = vi.spyOn(adminApi, 'audit').mockResolvedValue({ content: [], page: 0, size: 50, totalElements: 0, totalPages: 0 });
+    renderWithSession(<AuditLog />, { me: { ...testUser, role: 'ADMIN' }, route: '/admin/audit?page=2&size=100' });
+    await waitFor(() => expect(audit).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2, size: 100 }), expect.any(AbortSignal)));
+  });
+
+  it('keeps user management discoverable from the overview when dashboard data is unavailable', async () => {
+    vi.spyOn(adminApi, 'dashboard').mockRejectedValue(new ApiError(503, { detail: 'Temporarily unavailable' }));
+    renderWithSession(<AdminDashboard />, { me: { ...testUser, role: 'ADMIN' } });
+    await screen.findByText('Could not load dashboard');
+    expect(screen.getByRole('link', { name: 'Manage users' })).toHaveAttribute('href', '/admin/users');
   });
 
   it('filters people by role and restores the full directory when cleared', async () => {

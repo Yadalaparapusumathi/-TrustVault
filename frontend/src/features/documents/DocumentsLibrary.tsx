@@ -20,7 +20,7 @@ import { DocumentsTable, type RowActions } from './DocumentsTable';
 import { DocumentsGrid } from './DocumentsGrid';
 import { useDocuments, useDownload, usePurgeDocument, useRestoreDocument, useTrashDocument } from './hooks';
 import { UploadDialog } from './UploadDialog';
-import { PAGE_SIZE, useLibraryParams } from './useLibraryParams';
+import { PAGE_SIZES, useLibraryParams } from './useLibraryParams';
 
 const SORT_OPTIONS = [
   { label: 'Recently updated', field: 'updatedAt', direction: 'desc' },
@@ -36,7 +36,7 @@ const SORT_OPTIONS = [
 export function DocumentsLibrary() {
   const me = useMe();
   const isOwnerRole = me.role === 'OWNER';
-  const { filters, apiParams, hasFilters, setFilter, clearFilters, setScope, setPage, toggleSort, setSort } = useLibraryParams();
+  const { filters, apiParams, hasFilters, setFilter, clearFilters, setScope, setPage, setSize, toggleSort, setSort } = useLibraryParams();
   const scope: DocumentScope = !isOwnerRole && (filters.scope === 'owned' || filters.scope === 'trash') ? 'all' : filters.scope;
   const docs = useDocuments({ ...apiParams, scope });
 
@@ -130,10 +130,13 @@ export function DocumentsLibrary() {
                 <div className="border-t border-slate-100">
                   <Pagination
                     page={page.page}
-                    size={page.size || PAGE_SIZE}
+                    size={page.size || filters.size}
                     totalPages={page.totalPages}
                     totalElements={page.totalElements}
                     onPageChange={setPage}
+                    onSizeChange={setSize}
+                    sizeOptions={PAGE_SIZES}
+                    itemLabel="documents"
                   />
                 </div>
               )}

@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { CLASSIFICATIONS, type Classification, type DocumentScope, type DocumentSearchParams, type DocumentSortField, type SortDirection } from '@/api/types';
 
 export const PAGE_SIZE = 20;
+/** Backend caps document pages at 100. */
+export const PAGE_SIZES = [10, 20, 50, 100] as const;
 const SCOPES: DocumentScope[] = ['all', 'owned', 'shared', 'trash'];
 const SORT_FIELDS: DocumentSortField[] = ['name', 'createdAt', 'updatedAt', 'sizeBytes'];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -16,6 +18,7 @@ export interface LibraryFilters {
   from: string;
   to: string;
   page: number;
+  size: number;
   sortField: DocumentSortField;
   sortDir: SortDirection;
 }
@@ -37,6 +40,7 @@ export function useLibraryParams() {
     const cls = params.get('classification') ?? '';
     const [sf, sd] = (params.get('sort') ?? 'updatedAt,desc').split(',');
     const page = Number.parseInt(params.get('page') ?? '0', 10);
+    const size = Number.parseInt(params.get('size') ?? '', 10);
     const from = params.get('from') ?? '';
     const to = params.get('to') ?? '';
     return {
@@ -48,6 +52,7 @@ export function useLibraryParams() {
       from: DATE_RE.test(from) ? from : '',
       to: DATE_RE.test(to) ? to : '',
       page: Number.isFinite(page) && page >= 0 ? page : 0,
+      size: (PAGE_SIZES as readonly number[]).includes(size) ? size : PAGE_SIZE,
       sortField: (SORT_FIELDS as string[]).includes(sf ?? '') ? (sf as DocumentSortField) : 'updatedAt',
       sortDir: sd === 'asc' ? 'asc' : 'desc',
     };
@@ -58,7 +63,7 @@ export function useLibraryParams() {
       // Router search-param updates are not queued like setState; merge simultaneous debounced edits.
       const next = new URLSearchParams(latestParams.current);
       for (const [k, v] of Object.entries(changes)) {
-        if (v === null || v === '' || (k === 'page' && v === 0) || (k === 'scope' && v === 'all') || (k === 'sort' && v === 'updatedAt,desc')) {
+        if (v === null || v === '' || (k === 'page' && v === 0) || (k === 'size' && v === PAGE_SIZE) || (k === 'scope' && v === 'all') || (k === 'sort' && v === 'updatedAt,desc')) {
           next.delete(k);
         } else {
           next.set(k, String(v));
@@ -75,6 +80,7 @@ export function useLibraryParams() {
   const clearFilters = useCallback(() => update(Object.fromEntries(FILTER_KEYS.map((k) => [k, null]))), [update]);
   const setScope = useCallback((scope: DocumentScope) => update({ scope }), [update]);
   const setPage = useCallback((page: number) => update({ page }, false), [update]);
+  const setSize = useCallback((size: number) => update({ size }), [update]);
   const setSort = useCallback((field: DocumentSortField, direction: SortDirection) => update({ sort: `${field},${direction}` }), [update]);
   const toggleSort = useCallback(
     (field: DocumentSortField) => {
@@ -97,11 +103,11 @@ export function useLibraryParams() {
       from: filters.from || undefined,
       to: filters.to || undefined,
       page: filters.page,
-      size: PAGE_SIZE,
+      size: filters.size,
       sort: `${filters.sortField},${filters.sortDir}`,
     }),
     [filters],
   );
 
-  return { filters, apiParams, hasFilters, setFilter, clearFilters, setScope, setPage, toggleSort, setSort };
+  return { filters, apiParams, hasFilters, setFilter, clearFilters, setScope, setPage, setSize, toggleSort, setSort };
 }

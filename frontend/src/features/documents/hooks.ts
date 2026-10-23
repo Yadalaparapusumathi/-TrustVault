@@ -57,7 +57,7 @@ export function useGrants(id: string, enabled = true) {
 
 export function useActivity(id: string, page: number, size = 20, enabled = true) {
   return useQuery({
-    queryKey: queryKeys.documents.activity(id, page),
+    queryKey: queryKeys.documents.activity(id, page, size),
     queryFn: ({ signal }) => documentsApi.activity(id, page, size, signal),
     placeholderData: keepPreviousData,
     enabled,

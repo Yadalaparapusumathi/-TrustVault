@@ -15,8 +15,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Input } from '@/components/ui/Input';
 import { RelativeTime } from '@/components/ui/RelativeTime';
+import { Pagination } from '@/components/ui/Pagination';
 import { SkeletonRows } from '@/components/ui/Skeleton';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/Table';
+import { usePagination } from '@/components/ui/usePagination';
 import { useNow } from '@/lib/useNow';
 import { notifyError } from '@/lib/notify';
 import { formatNumber } from '@/lib/format';
@@ -64,6 +66,7 @@ export function UsersAdmin() {
       : all;
     return [...filtered].sort((a, b) => Number(b.active) - Number(a.active) || a.displayName.localeCompare(b.displayName));
   }, [users.data, filter, roleFilter]);
+  const { pageItems, pagination } = usePagination(list, { initialSize: 10, resetKey: `${filter}|${roleFilter ?? ''}` });
 
   const userFor = (kind: NonNullable<Action>['kind']): AdminUser | null => (action && action.kind === kind && 'user' in action ? action.user : null);
 
@@ -133,7 +136,7 @@ export function UsersAdmin() {
               </tr>
             </THead>
             <TBody>
-              {list.map((u) => {
+              {pageItems.map((u) => {
                 const isSelf = u.id === me.id;
                 const items: MenuItem[] = [
                   { key: 'edit', label: 'Edit', icon: <Pencil className="h-4 w-4" />, onSelect: () => setAction({ kind: 'edit', user: u }) },
@@ -219,6 +222,11 @@ export function UsersAdmin() {
               })}
             </TBody>
           </Table>
+        )}
+        {users.data && list.length > 0 && (
+          <div className="border-t border-slate-100">
+            <Pagination {...pagination} itemLabel="accounts" />
+          </div>
         )}
       </Card>
 

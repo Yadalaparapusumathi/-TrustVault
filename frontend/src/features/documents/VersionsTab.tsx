@@ -7,15 +7,18 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { Pagination } from '@/components/ui/Pagination';
 import { RelativeTime } from '@/components/ui/RelativeTime';
 import { SkeletonRows } from '@/components/ui/Skeleton';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/Table';
+import { usePagination } from '@/components/ui/usePagination';
 import { formatBytes, shortHash } from '@/lib/format';
 import { useDownload, useVersions } from './hooks';
 
 export function VersionsTab({ doc }: { doc: DocumentDetail }) {
   const versions = useVersions(doc.id);
   const download = useDownload();
+  const { pageItems, pagination } = usePagination(versions.data ?? [], { initialSize: 10, resetKey: doc.id });
 
   return (
     <Card className="overflow-hidden">
@@ -27,6 +30,7 @@ export function VersionsTab({ doc }: { doc: DocumentDetail }) {
       ) : versions.data.length === 0 ? (
         <EmptyState icon={<History className="h-5 w-5" />} title="No versions" />
       ) : (
+        <>
         <Table>
           <THead>
             <tr>
@@ -41,7 +45,7 @@ export function VersionsTab({ doc }: { doc: DocumentDetail }) {
             </tr>
           </THead>
           <TBody>
-            {versions.data.map((v) => {
+            {pageItems.map((v) => {
               const key = `v${v.versionNo}`;
               return (
                 <TR key={v.versionNo}>
@@ -83,6 +87,10 @@ export function VersionsTab({ doc }: { doc: DocumentDetail }) {
             })}
           </TBody>
         </Table>
+        <div className="border-t border-slate-100">
+          <Pagination {...pagination} sizeOptions={[10, 20, 50]} itemLabel="versions" />
+        </div>
+        </>
       )}
     </Card>
   );

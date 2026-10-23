@@ -11,7 +11,7 @@ export const queryKeys = {
     versions: (id: string) => ['documents', 'detail', id, 'versions'] as const,
     grants: (id: string) => ['documents', 'detail', id, 'grants'] as const,
     suggestions: (id: string) => ['documents', 'detail', id, 'suggestions'] as const,
-    activity: (id: string, page: number) => ['documents', 'detail', id, 'activity', page] as const,
+    activity: (id: string, page: number, size: number) => ['documents', 'detail', id, 'activity', page, size] as const,
     activityAll: (id: string) => ['documents', 'detail', id, 'activity'] as const,
   },
   directory: (q: string) => ['users', 'directory', q] as const,
