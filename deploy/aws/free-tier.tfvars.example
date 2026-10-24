@@ -1,0 +1,9 @@
+# Copy to deploy/aws/free-tier.tfvars (git-ignored) to change defaults for: deploy/aws/deploy.sh --free-tier
+
+aws_region = "ap-south-1"
+
+# Optional: e-mail for alarms (confirm the subscription e-mail AWS sends).
+# alarm_email = "ops@example.com"
+
+# After first sign-in as admin and changing its password, set this to false and redeploy.
+# seed_admin = false

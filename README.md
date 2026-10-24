@@ -216,6 +216,45 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 > end. A first attempt hit a registry timeout, and container work was then paused at the project owner's request.
 > The backend and frontend have each been run and tested natively, as described above.
 
+### AWS (Terraform)
+
+`deploy/aws/` provisions a production stack and deploys the current working tree:
+
+```
+Internet ─► CloudFront (HTTPS, WAF) ─► ALB (accepts CloudFront only) ─► ECS Fargate task ×2 (private subnets)
+                                                                        ├─ db-init  creates DB + roles, exits
+                                                                        ├─ backend  127.0.0.1:8081
+                                                                        └─ frontend nginx :8080
+                                                                              │ TLS
+                                                         RDS PostgreSQL 16 (isolated subnets, Multi-AZ)
+```
+
+- **Database:** Multi-AZ, KMS-encrypted, TLS enforced (`rds.force_ssl`), 14-day backups with point-in-time
+  recovery, final snapshot and deletion protection, storage autoscaling, Performance Insights, enhanced monitoring,
+  logs in CloudWatch. RDS generates and rotates the master password in Secrets Manager. The app still uses
+  the two least-privilege roles described above.
+- **Secrets:** DB role passwords, `TV_MASTER_KEY`, `TV_AUDIT_HMAC_KEY` and the admin bootstrap password are
+  generated once and stored in Secrets Manager. The secret is protected from `terraform destroy`.
+- **Operations:** rolling deploys with automatic rollback, CPU autoscaling (2–4 tasks), alarms and RDS events go to
+  SNS, plus ALB access logs, VPC flow logs and ECS Exec.
+
+```bash
+aws configure                                         # or: aws configure sso
+cp deploy/aws/terraform.tfvars.example deploy/aws/terraform.tfvars   # optional: region, domain, alarm e-mail
+deploy/aws/deploy.sh
+```
+
+The first run takes about 20 minutes. The script prints the URL and the command that reveals the admin password.
+After you sign in and change the admin password, set `seed_admin = false` and run the script again.
+
+**Free-tier variant:** `deploy/aws/deploy.sh --free-tier` deploys `deploy/aws/free-tier/` instead. It is one
+Graviton EC2 instance (`t4g.small`, which can be reached only from CloudFront, with no SSH and access through
+Session Manager) running the same containers, plus a private single-AZ RDS `db.t4g.micro`. That database is
+encrypted, TLS-only, has 7-day point-in-time backups and deletion protection, and RDS manages its master password.
+CloudFront provides HTTPS. There is no NAT gateway, load balancer or WAF. A new image tag replaces the instance,
+which causes a few minutes of downtime. All data is in RDS. When you outgrow the free tier, move to the full
+stack or set `db_multi_az = true`.
+
 **Without containers**, deploy it like any Spring Boot + static SPA app:
 1. Run the jar with the variables below, as a non-root user behind TLS.
 2. Serve `frontend/dist` from a web server that proxies `/api/` to the jar. See `frontend/nginx.conf` for the

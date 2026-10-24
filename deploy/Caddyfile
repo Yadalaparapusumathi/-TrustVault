@@ -1,7 +1,11 @@
 {$TV_DOMAIN} {
 	encode zstd gzip
 	# Caddy does not trust client-supplied X-Forwarded-For (no trusted_proxies), so the backend sees the real client IP.
-	reverse_proxy frontend:8080
+	reverse_proxy frontend:8080 {
+		# Only meaningful behind CloudFront (see frontend/nginx.conf); never accept them from clients here.
+		header_up -CloudFront-Viewer-Address
+		header_up -CloudFront-Forwarded-Proto
+	}
 	header {
 		-Server
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"

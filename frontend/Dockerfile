@@ -8,7 +8,8 @@ RUN npm run build
 
 # ---- Runtime stage -----------------------------------------------------------
 FROM nginxinc/nginx-unprivileged:1.27-alpine
-ENV BACKEND_HOST=backend
+ENV BACKEND_HOST=backend \
+    BACKEND_PORT=8080
 # The image's entrypoint runs envsubst on /etc/nginx/templates/*.template -> /etc/nginx/conf.d/
 # Only variables defined in the environment are substituted, so nginx's own $vars are untouched.
 COPY nginx.conf /etc/nginx/templates/default.conf.template

@@ -1,0 +1,21 @@
+# Copy to deploy/aws/terraform.tfvars (git-ignored) and adjust. Every value has a sensible default.
+
+aws_region  = "ap-south-1"
+environment = "prod"
+
+# Optional: e-mail for alarms (you must confirm the subscription e-mail AWS sends).
+# alarm_email = "ops@example.com"
+
+# Optional custom domain. The certificate must be in us-east-1 (CloudFront requirement).
+# Afterwards create a CNAME from the domain to the `cloudfront_domain` output.
+# domain_name         = "vault.example.com"
+# acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/..."
+
+# Cost/resilience knobs
+# db_instance_class  = "db.t4g.medium"
+# db_multi_az        = true
+# nat_gateway_per_az = false
+# desired_count      = 2
+
+# After first sign-in as admin and changing its password, set this to false and redeploy.
+# seed_admin = false

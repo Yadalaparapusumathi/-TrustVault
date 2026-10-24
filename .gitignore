@@ -12,3 +12,10 @@ frontend/coverage/
 .vscode/
 *.iml
 .DS_Store
+# Terraform
+deploy/aws/*/.terraform/
+deploy/aws/*/*.tfstate*
+deploy/aws/*.tfvars
+!deploy/aws/*.tfvars.example
+deploy/azure/terraform/.terraform/
+deploy/azure/terraform.tfvars

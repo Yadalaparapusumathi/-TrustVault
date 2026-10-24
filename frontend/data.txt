@@ -1,0 +1,30 @@
+Froent end application -React application(Using this web application are created)
+React Id web framework to create the web application.
+
+React Works on node.So node is required.
+
+
+Node can be installed in so many ways 
+1.NVM install ->install node with NVM
+2.Direct node install from the browser download
+
+Version check: node -V 
+
+by using node we can donwload all the required dependencys for the react web application.
+
+after node install,use below command to install dependecnys
+---------------------------------------------------------
+npm install --verbose
+
+
+npm run dev
+
+
+dbc:postgresql://database-1.cluster-cdq420824xj2.ap-southeast-2.rds.amazonaws.com:5432/postgres?sslmode=require
+
+database-1.cluster-cdq420824xj2.ap-southeast-2.rds.amazonaws.com:5432/?Action=connect&DBUser=postgres&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIA2BEZABHAXDW5AZG7%2F20261024%2Fap-southeast-2%2Frds-db%2Faws4_request&X-Amz-Date=20261024T170853Z&X-Amz-Expires=900&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEOH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDmFwLXNvdXRoZWFzdC0yIkgwRgIhAMjrSd50%2F9PFc8uBAL%2F%2BXDF6X%2FZTo8ojqI%2BEUep38pLDAiEApgmuSPHy8T6nZd2Hxe8AYLqagT7K%2BLouhx6%2B9zh9kZwqoAgIqv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw2ODk2NjMxMTc3NjEiDPXCJd8pQbunPYqj9Sr0B0heHJvYLCUbFBkyfYYMfPTdIumo%2FWZNeTp3bjZJGgBLs85ANk3qYkbjYjTJ0dXpU84fSyF5Z0Ks%2FS8LkhYAO8bfvxQaAXbZ9BwQJGpujkz1Cynzad66As21MWrCJHvz2IATDFYyo7f8%2Fnhj9KLcE7713pnw54aCgtL4Qlpj7bWWOLqJUdMcmbbNOX5sFHmeOakhHUYxj7G1H0Ls%2F5K5AJ%2F6VJDMfT06ANHOYxioaI6LxYs50TfRJuPwcQ07joFat2cwa1Zr4s71TYiTx0yXSce%2FNrWbwEi0VHh65cVtpAE6QYCpG89CyPrPCNvt5b0A4HySnt8cqOpwpPxb5aLRQG9ilLICOPit%2B4LQWOTIrCBWZy0U3%2BsUNejx4fDshAmOWeht7QTDBBTobxHmIUrq0CuVOOcUiAeBxjoSrXKsnomLIr5ElapQlHYlKD7IY%2B818RN%2BRef7hY6BHouI74VyJklf7ApULWq79gkX%2FMYgd1ZMUtob4YJN0C2EDm5vU%2B1eT7Y7Oni%2FsPjMtYK43yUbIyrfAlD2GAcMZsb1p9jNJp5QmMGtRpvNLNRB8KPY%2FbxixTJ2KMIP0WG58%2FLNYo81vL0TuFaDDfy7IDtJWrnU7A5vh86U3f9t9N%2BDpDxXvY%2F8pNQixG6aoBXdnPMUEWMIPOy9%2FP3VQuhz6bilR8FY5Oogu7ALx3AnGjZHz7xUnUjERSr4X6AqWSGAeSbxPVUOhhoqxAr2rRcvY7pONfWzhOY4ujt1fBpXAs2ZOejNr7Lj5y3Iu9Mia3oaDzEZ8xhcGWgy7nG%2Bq%2BGCJ5GetDEmCDBlCCI9V%2B6iIlsXMJowpwWLRCDUHYK4QHEGWdu8GmRqiE74tsI83TNV7ZCPpw6qOBBIU7TAF%2B%2FamqsLAKpnIcava1E0O4nNu2DwA4snh87A3pjZeKeoOer1soW8%2FSrG38PkeYDziK5tcywQ%2BpHhqzW7WwUiZSxlaF84fgIF6T4CoRL%2FdJq2mCs2cJ7h%2FgcdzC9K4kr18bKYEmxj3jYGp0h3byT3Ywyd9d65A8rGxDn%2B%2Bjb%2FeSDKJxIGcQilctwoWLT90DOtAjzaTOibxEmBdB7W%2BaYYBXuf8MD%2FOTs3rC253q4uzXurHYebzNGAtHGd2lTkWfIDAjPTAk0AcxWPLJatdmFTji3mj33zt05joNNhFC98nb2gcoAwWMK4e9n%2BFyCr9AC%2BdLjrMWjtem5hlYi%2B2tF2Kr6PbX2g1G8bsbzWoBTdI6XnfcusY3zhpuomcfzH1Dj2D8XG7%2BGyqmYUgI%2Fkpbr9r%2F%2FJhMX44JugyTWYIlacc%2FeGZx1D3ZoYk%2BCiU89485%2FpjC6AvNOwGsrgQ%2F4FX6WJnlUwncrz1gY6twLyT3eT9w%2FB5QBSu7HVCbq1pjRYl34xXOFP6vBClD6Cvfm9PhocfLJIYny9Jq%2FQKzrgT01jZ8HjucPRTKnxoH1wv8iDBkm19iubEJmn%2Ba28Dvg%2FVmrLGW2F7GLSHOYz7QKATFnKFvoeo4dLS3mx0elJekQ0mWS0YGtiiD9P3a8WEMNoNGLvRXzJjIA3znqq1x7Srs%2FyKhmc%2FaKrJL0G20A0YgF4VWSAxhRM7YUbDQlvQgx0cc5QjB22%2BZaqok0%2FQjtinA3sJOALvEK4vAdnyl8dkEGRMUf5leHzDYT52c2ngZ3YEIkhCvIjmUpqRgHOAk7J9xXDurkWHAT732euc8bUPPyXg6RGxAiNPV20lCNxVh5MArYyQUqAQYAqCibYRBdKblUFDPk06c4FF7NHx%2FrYCR6i5hnLqA%3D%3D&X-Amz-Signature=375b2a4fb8209903d7e047159dc596cc23014356c115004d5527eae4443c86ac&X-Amz-SignedHeaders=host
+
+
+ az keyvault secret show --vault-name tv-prod-dqvpbq --name admin-bootstrap-secret --query value -o tsv
+
+ Suma@28022006

@@ -54,21 +54,23 @@ export default function LoginPage() {
     }
   };
 
+  // From lg up the page is exactly one viewport tall: the hero scales with the window height (the illustration
+  // hides on short screens) so nothing needs scrolling. Below lg it is a single column that scrolls normally.
   return (
-    <div className="grid min-h-screen bg-canvas lg:grid-cols-[1.05fr_1fr]">
-      <aside className="workspace-hero relative m-4 hidden flex-col justify-between p-10 lg:flex xl:p-14">
+    <div className="grid min-h-dvh bg-canvas lg:h-dvh lg:grid-cols-[1.05fr_1fr] lg:overflow-hidden">
+      <aside className="workspace-hero relative m-4 hidden min-h-0 flex-col justify-between gap-[2vh] p-[clamp(1.5rem,4.5vh,3.5rem)] lg:flex">
         <div className="flex items-center justify-between">
           <Logo inverted />
           <span className="rounded-full border border-white/15 px-3 py-1.5 text-[10px] text-white/65">CONFIDENTIAL, BY DEFAULT</span>
         </div>
-        <div className="mx-auto w-full max-w-lg py-8">
-          <p className="eyebrow mb-5 flex items-center gap-2 text-lime"><span className="h-1.5 w-1.5 rounded-full bg-lime" /> A little more control. A lot more trust.</p>
-          <h1 className="text-[clamp(2.25rem,3.5vw,3.6rem)] font-medium leading-[1.16] tracking-[-0.055em]">
+        <div className="mx-auto flex min-h-0 w-full max-w-lg flex-col">
+          <p className="eyebrow mb-[2.5vh] flex items-center gap-2 text-lime"><span className="h-1.5 w-1.5 rounded-full bg-lime" /> A little more control. A lot more trust.</p>
+          <h1 className="text-[clamp(1.75rem,min(3.5vw,5.4vh),3.6rem)] font-medium leading-[1.16] tracking-[-0.055em]">
             The right files.<br />The right people.<br /><span className="text-lime">Nothing left to chance.</span>
           </h1>
-          <p className="mt-6 max-w-sm text-sm leading-7 text-white/60">A considered space for your most confidential work. Share precisely, stay in control, and know who accessed what.</p>
-          <VaultIllustration className="mx-auto mt-2 max-w-[420px]" />
-          <div className="grid grid-cols-3 gap-4 border-t border-white/10 pt-6">
+          <p className="mt-[2.5vh] max-w-sm text-sm leading-7 text-white/60">A considered space for your most confidential work. Share precisely, stay in control, and know who accessed what.</p>
+          <VaultIllustration className="mx-auto my-[1vh] h-[30vh] max-h-[283px] w-auto max-w-[420px] [@media(max-height:640px)]:hidden" />
+          <div className="mt-[1.5vh] grid grid-cols-3 gap-4 border-t border-white/10 pt-[2.5vh]">
             {[{ icon: LockKeyhole, title: 'Private access', text: 'Named people only' }, { icon: Fingerprint, title: 'A lasting record', text: 'Tamper-evident history' }, { icon: ShieldCheck, title: 'Your control', text: 'Revoke on next request' }].map((item) => (
               <div key={item.title}><item.icon className="mb-3 h-5 w-5 text-lime" strokeWidth={1.5} /><p className="text-xs font-medium text-white">{item.title}</p><p className="mt-1 text-[11px] text-white/45">{item.text}</p></div>
             ))}
@@ -77,7 +79,7 @@ export default function LoginPage() {
         <p className="text-[11px] text-white/35">&copy; {new Date().getFullYear()} TrustVault. Built around trust, not public links.</p>
       </aside>
 
-      <main className="flex items-center justify-center px-6 py-10 sm:px-12">
+      <main className="flex items-center justify-center px-6 py-10 sm:px-12 lg:min-h-0 lg:overflow-y-auto lg:py-6">
         <div className="w-full max-w-[410px]">
           <div className="mb-8 lg:hidden">
             <Logo />

@@ -20,16 +20,16 @@ spring:
     virtual:
       enabled: true
   datasource:
-    url: ${TV_DB_URL:jdbc:postgresql://localhost:5432/trustvault}
-    username: ${TV_DB_APP_USER:trustvault_app}
-    password: ${TV_DB_APP_PASSWORD:trustvault_app}
+    url: ${TV_DB_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: ${TV_DB_APP_USER:imitra}
+    password: ${TV_DB_APP_PASSWORD:imitra}
     hikari:
       maximum-pool-size: ${TV_DB_POOL_SIZE:10}
   flyway:
     # Migrations run as the schema owner. The application itself connects as a less-privileged role
     # that cannot UPDATE, DELETE or TRUNCATE the audit table (see V1__schema.sql).
-    user: ${TV_DB_OWNER_USER:trustvault_owner}
-    password: ${TV_DB_OWNER_PASSWORD:trustvault_owner}
+    user: ${TV_DB_OWNER_USER:imitra}
+    password: ${TV_DB_OWNER_PASSWORD:imitra}
     placeholders:
       appUser: ${TV_DB_APP_USER:trustvault_app}
   jpa:

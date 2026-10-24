@@ -1,0 +1,97 @@
+#!/bin/bash
+# EC2 user data (Amazon Linux 2023, runs once on first boot). Rendered by Terraform; see main.tf.
+# Mirrors docker-compose.yml: db-init, then backend and frontend on a private Docker network, with only nginx
+# published (port 80, reachable from CloudFront only). Containers restart on failure and on reboot.
+set -euo pipefail
+exec > >(tee -a /var/log/trustvault-bootstrap.log) 2>&1
+
+REGION="${region}"
+export AWS_REGION="$REGION"
+
+dnf install -y docker
+systemctl enable --now docker
+
+install -d -m 700 /etc/trustvault
+
+# Secrets -> root-only env files (never written to user data or the AMI).
+aws secretsmanager get-secret-value --secret-id "${app_secret_arn}" --query SecretString --output text > /etc/trustvault/app.json
+aws secretsmanager get-secret-value --secret-id "${master_secret_arn}" --query SecretString --output text > /etc/trustvault/master.json
+chmod 600 /etc/trustvault/*.json
+
+python3 - <<'PY'
+import json, os
+app = json.load(open("/etc/trustvault/app.json"))
+master = json.load(open("/etc/trustvault/master.json"))
+
+def write(path, values):
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        for k, v in values.items():
+            f.write(f"{k}={v}\n")
+
+write("/etc/trustvault/db-init.env", {
+    "PGHOST": "${db_host}", "PGPORT": "${db_port}", "PGSSLMODE": "require", "PGCONNECT_TIMEOUT": "10",
+    "PGUSER": master["username"], "PGPASSWORD": master["password"],
+    "TV_DB_OWNER_PASSWORD": app["TV_DB_OWNER_PASSWORD"], "TV_DB_APP_PASSWORD": app["TV_DB_APP_PASSWORD"],
+})
+write("/etc/trustvault/backend.env", {
+    "TV_DB_URL": "jdbc:postgresql://${db_host}:${db_port}/trustvault?sslmode=require",
+    "TV_DB_OWNER_USER": "trustvault_owner", "TV_DB_APP_USER": "trustvault_app",
+    "TV_DB_OWNER_PASSWORD": app["TV_DB_OWNER_PASSWORD"], "TV_DB_APP_PASSWORD": app["TV_DB_APP_PASSWORD"],
+    "TV_MASTER_KEY": app["TV_MASTER_KEY"], "TV_AUDIT_HMAC_KEY": app["TV_AUDIT_HMAC_KEY"],
+    "TV_COOKIE_SECURE": "true", "TV_SEED_ENABLED": "${seed_admin}",
+    "TV_SEED_PASSWORD_ADMIN": app["TV_SEED_PASSWORD_ADMIN"],
+})
+PY
+rm -f /etc/trustvault/app.json /etc/trustvault/master.json
+
+cat > /etc/trustvault/db-init.sh <<'DBINIT'
+${db_init_script}
+DBINIT
+
+aws ecr get-login-password | docker login --username AWS --password-stdin "${registry}"
+docker pull "${backend_image}"
+docker pull "${frontend_image}"
+
+# Database and least-privilege roles (idempotent). RDS is available before the instance starts, but retry anyway.
+for attempt in $(seq 1 30); do
+  if docker run --rm --env-file /etc/trustvault/db-init.env -v /etc/trustvault/db-init.sh:/db-init.sh:ro \
+      --cap-drop ALL public.ecr.aws/docker/library/postgres:16-alpine sh /db-init.sh; then
+    break
+  fi
+  [ "$attempt" = 30 ] && { echo "database initialisation failed"; exit 1; }
+  sleep 10
+done
+rm -f /etc/trustvault/db-init.env
+
+docker network create trustvault >/dev/null 2>&1 || true
+
+log_opts() { # <stream name>
+  echo --log-driver awslogs --log-opt awslogs-region="$REGION" \
+    --log-opt awslogs-group="/trustvault/${environment}/$1" --log-opt awslogs-create-group=false
+}
+
+docker rm -f backend frontend >/dev/null 2>&1 || true
+
+docker run -d --name backend --network trustvault --restart unless-stopped \
+  --env-file /etc/trustvault/backend.env \
+  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true \
+  --memory 1400m $(log_opts backend) \
+  "${backend_image}"
+
+docker run -d --name frontend --network trustvault --restart unless-stopped \
+  -e BACKEND_HOST=backend -p 80:8080 \
+  --read-only --tmpfs /tmp:uid=101,gid=101 --tmpfs /etc/nginx/conf.d:uid=101,gid=101 \
+  --cap-drop ALL --security-opt no-new-privileges:true \
+  --memory 128m $(log_opts frontend) \
+  "${frontend_image}"
+
+for _ in $(seq 1 60); do
+  if curl -fsS http://127.0.0.1/actuator/health | grep -q '"UP"'; then
+    echo "TrustVault is up"
+    exit 0
+  fi
+  sleep 5
+done
+echo "TrustVault did not become healthy; see: docker logs backend"
+exit 1
